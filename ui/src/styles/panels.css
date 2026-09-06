@@ -1,0 +1,403 @@
+/* ============================================================
+   Right column — system status, speaker, language, voice, metrics
+   ============================================================ */
+
+.col-right > .hud {
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
+.col-right .hud-body {
+  overflow: visible;
+}
+
+.col-right .hud-title {
+  margin-bottom: 1px;
+}
+
+/* -- generic stacked rows (System Status) ------------------------ */
+.p-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: clamp(5px, 0.62vh, 10px);
+}
+
+/* ============================================================
+   Speaker profile
+   ============================================================ */
+
+.spk {
+  display: flex;
+  align-items: center;
+  gap: clamp(9px, 0.9vw, 17px);
+  margin-top: clamp(5px, 0.62vh, 10px);
+}
+
+.spk-ring {
+  position: relative;
+  flex: none;
+  width: clamp(58px, 4.9vw, 86px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.spk-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.spk-track {
+  fill: none;
+  stroke: rgba(255, 190, 90, 0.15);
+  stroke-width: 3;
+}
+
+.spk-arc {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 3.6;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 12px rgba(253, 190, 64, 0.9));
+  animation: spk-glow 3.2s var(--ease-hud) infinite alternate;
+}
+
+@keyframes spk-glow {
+  from {
+    opacity: 0.72;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.spk-inner {
+  fill: rgba(255, 170, 60, 0.045);
+  stroke: rgba(255, 195, 115, 0.2);
+  stroke-width: 1;
+}
+
+.spk-lattice {
+  position: relative;
+  color: var(--amber-hot);
+  filter: drop-shadow(0 0 8px rgba(251, 175, 36, 0.7));
+  animation: spk-spin 26s linear infinite;
+}
+
+@keyframes spk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spk-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.spk-name {
+  font-family: var(--font-hud);
+  font-size: clamp(15px, 1.18vw, 24px);
+  font-weight: 800;
+  letter-spacing: 0.085em;
+  line-height: 1.1;
+  color: #ffffff;
+  text-shadow:
+    0 0 12px rgba(255, 205, 115, 0.6),
+    0 0 30px rgba(251, 140, 36, 0.3);
+}
+
+.spk-verified {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 1px;
+  font-family: var(--font-hud);
+  font-size: clamp(9px, 0.66vw, 12.5px);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--green-hot);
+  text-shadow: 0 0 11px rgba(80, 240, 150, 0.6);
+}
+
+.spk-verified svg {
+  flex: none;
+  filter: drop-shadow(0 0 6px rgba(80, 240, 150, 0.9));
+}
+
+.spk-conf {
+  margin-top: 3px;
+  font-size: clamp(10.5px, 0.76vw, 14px);
+  font-weight: 500;
+  color: var(--ink-dim);
+}
+
+/* confidence meter — the right margin reserves room for the label so the
+   inline percentage width still resolves against the visible track. */
+.spk-bar {
+  --lab: clamp(26px, 2.1vw, 36px);
+  position: relative;
+  height: 7px;
+  margin: 6px calc(var(--lab) + 8px) 0 0;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(255, 190, 90, 0.2);
+}
+
+.spk-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, rgba(255, 175, 60, 0.7), var(--amber-hot));
+  box-shadow: 0 0 10px rgba(251, 175, 36, 0.7);
+  transform-origin: left center;
+  animation: spk-fill 1.2s var(--ease-out) both;
+}
+
+@keyframes spk-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.spk-bar b {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-hud);
+  font-size: clamp(8.5px, 0.64vw, 12px);
+  font-weight: 700;
+  color: var(--amber-hot);
+  text-shadow: 0 0 9px rgba(251, 175, 36, 0.6);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Language detected
+   ============================================================ */
+
+.lang-name {
+  margin-top: clamp(4px, 0.55vh, 9px);
+  font-family: var(--font-hud);
+  font-size: clamp(16px, 1.36vw, 28px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.08;
+  background: linear-gradient(96deg, #e0d2ff 0%, #a78bfa 46%, #7aa8ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 13px rgba(160, 120, 255, 0.55));
+}
+
+.lang-sub {
+  margin-top: 1px;
+  font-size: clamp(10px, 0.72vw, 13px);
+  font-weight: 500;
+  color: var(--ink-faint);
+}
+
+.lang-pills {
+  display: flex;
+  gap: 6px;
+  margin-top: clamp(6px, 0.7vh, 11px);
+}
+
+.pill {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: clamp(4px, 0.45vh, 7px) clamp(5px, 0.45vw, 10px);
+  border-radius: 8px;
+  font-family: var(--font-hud);
+  font-size: clamp(8.5px, 0.64vw, 12px);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: #a3b7dd;
+  background: rgba(255, 255, 255, 0.032);
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.28);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    color 0.3s var(--ease-hud),
+    background 0.3s var(--ease-hud),
+    box-shadow 0.3s var(--ease-hud),
+    transform 0.3s var(--ease-out);
+}
+
+.pill:hover {
+  color: #ecdfff;
+  transform: translateY(-1px);
+  background: rgba(139, 92, 246, 0.15);
+  box-shadow:
+    inset 0 0 0 1px rgba(178, 148, 255, 0.55),
+    0 0 15px -5px rgba(139, 92, 246, 0.75);
+}
+
+.pill.is-on {
+  /* Carries the "(active)" marker, so it takes the slack and the idle pills
+     shrink instead — otherwise a long Indic label truncates. */
+  flex: 1 1 auto;
+  color: #ffffff;
+  background: linear-gradient(
+    180deg,
+    rgba(167, 139, 250, 0.3),
+    rgba(109, 64, 220, 0.14)
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(196, 168, 255, 0.75),
+    0 0 20px -5px rgba(150, 100, 255, 0.8),
+    inset 0 0 20px -8px rgba(205, 180, 255, 0.8);
+  text-shadow: 0 0 11px rgba(195, 160, 255, 0.85);
+}
+
+.pill.is-indic {
+  font-family: var(--font-indic);
+  font-size: clamp(9px, 0.68vw, 13px);
+  letter-spacing: 0;
+}
+
+/* ============================================================
+   Voice output
+   ============================================================ */
+
+.voice {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.5vh, 9px);
+  margin-top: clamp(4px, 0.5vh, 9px);
+}
+
+.voice-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.sep {
+  margin: 0 5px;
+  color: var(--ink-faint);
+  font-weight: 700;
+}
+
+.muted {
+  margin-right: 5px;
+  color: var(--ink-dim);
+  font-weight: 500;
+}
+
+.voice-wave {
+  height: clamp(20px, 2.1vh, 34px);
+  justify-content: space-between;
+  gap: 3px;
+}
+
+.voice-wave i {
+  width: 3px;
+}
+
+/* ============================================================
+   Session metrics
+   ============================================================ */
+
+.met {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.8vw, 16px);
+  margin-top: clamp(4px, 0.55vh, 9px);
+}
+
+.met-rows {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.met-ring {
+  position: relative;
+  flex: none;
+  width: clamp(54px, 4.5vw, 78px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.met-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.met-track {
+  fill: none;
+  stroke: rgba(120, 170, 255, 0.13);
+  stroke-width: 5;
+}
+
+.met-arc {
+  fill: none;
+  stroke: url(#metGrad);
+  stroke-width: 5.4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 12px rgba(104, 184, 255, 0.85));
+  animation: met-glow 3.4s var(--ease-hud) infinite alternate;
+}
+
+@keyframes met-glow {
+  from {
+    opacity: 0.74;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.met-num {
+  position: relative;
+  font-family: var(--font-hud);
+  font-size: clamp(13px, 1.04vw, 20px);
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow:
+    0 0 13px rgba(120, 200, 255, 0.7),
+    0 0 30px rgba(80, 140, 255, 0.35);
+}
+
+.met-num sup {
+  margin-left: 1px;
+  font-size: 0.56em;
+  opacity: 0.78;
+}
+
+/* Short viewports: tighten every panel rather than clipping content. */
+@media (max-height: 860px) {
+  .col-right .hud-body {
+    padding: clamp(6px, 0.7vh, 11px) clamp(9px, 0.8vw, 14px);
+  }
+  .spk-ring {
+    width: clamp(50px, 4.2vw, 68px);
+  }
+  .met-ring {
+    width: clamp(48px, 4vw, 64px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spk-lattice,
+  .spk-arc,
+  .met-arc,
+  .spk-bar i {
+    animation: none;
+  }
+}

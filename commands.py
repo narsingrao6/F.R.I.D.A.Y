@@ -9,9 +9,11 @@ answer means the brain would happily invent the time instead.
 """
 
 import re
+import string
 from datetime import datetime
 
 from app_launcher import handle_app_command
+from pc_control import handle_pc_control_command
 
 # ------------------------------------------------------------- triggers
 
@@ -164,6 +166,20 @@ CONFIRMATION_YES = (
 _pending_system_action = None
 
 
+def _is_confirmation_yes(text: str) -> bool:
+    if text in CONFIRMATION_YES:
+        return True
+
+    first_word = text.split(maxsplit=1)[0] if text else ""
+    if first_word in {"yes", "yeah", "yep", "avunu", "haan", "han", "confirm", "proceed"}:
+        return True
+
+    return any(
+        " " in phrase and re.search(rf"\b{re.escape(phrase)}\b", text)
+        for phrase in CONFIRMATION_YES
+    )
+
+
 def _matches_system_command(text) -> str:
     """Returns the action name if matched, else None."""
     # Check exact match first
@@ -196,18 +212,19 @@ def _get_confirmation_prompt(action: str, language: str) -> str:
     return "Are you sure?"
 
 def _execute_system_action(action: str, language: str) -> str:
-    import os
+    import subprocess
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     if action == "shutdown":
-        os.system("shutdown /s /t 0")
+        subprocess.Popen(["shutdown", "/s", "/t", "0"], creationflags=flags)
         return "Shutting down." if language == "en" else ("షట్ డౌన్ చేస్తున్నాను." if language == "te" else "शट डाउन कर रही हूँ।")
     if action == "restart":
-        os.system("shutdown /r /t 0")
+        subprocess.Popen(["shutdown", "/r", "/t", "0"], creationflags=flags)
         return "Restarting." if language == "en" else ("రీస్టార్ట్ చేస్తున్నాను." if language == "te" else "रीस्टार्ट कर रही हूँ।")
     if action == "sleep":
-        os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+        subprocess.Popen(["rundll32.exe", "powrprof.dll,SetSuspendState", "0,1,0"], creationflags=flags)
         return "Sleeping." if language == "en" else ("స్లీప్ మోడ్." if language == "te" else "स्लीप मोड।")
     if action == "logout":
-        os.system("shutdown /l")
+        subprocess.Popen(["shutdown", "/l"], creationflags=flags)
         return "Logging out." if language == "en" else ("లాగౌట్ చేస్తున్నాను." if language == "te" else "लॉग आउट कर रही हूँ।")
     return "Done."
 
@@ -229,6 +246,7 @@ def handle_local_command(command, language: str = "en"):
         return None
 
     text = command.lower().strip()
+    text = text.translate(str.maketrans("", "", string.punctuation))
 
     if language not in ("en", "te", "hi"):
         language = "en"
@@ -239,11 +257,8 @@ def handle_local_command(command, language: str = "en"):
         _pending_system_action = None # Clear immediately
         
         # Did the user say yes?
-        if any(yes_word in text for yes_word in CONFIRMATION_YES) or len(text) < 2:
-            # We assume small mumbling could be a yes if prompted, but let's be strict
-            if any(yes_word == text for yes_word in CONFIRMATION_YES) or \
-               any(yes_word in text for yes_word in CONFIRMATION_YES):
-                return _execute_system_action(action, language)
+        if _is_confirmation_yes(text):
+            return _execute_system_action(action, language)
             
         # If they said anything else, cancel
         if language == "te": return "క్యాన్సిల్ చేశాను."
@@ -255,6 +270,10 @@ def handle_local_command(command, language: str = "en"):
 
     if _matches(text, DATE_PHRASES) or _matches_word(text, DATE_WORDS):
         return _date_answer(language)
+
+    pc_answer = handle_pc_control_command(command, language)
+    if pc_answer is not None:
+        return pc_answer
         
     # 2. Check for new system commands
     sys_action = _matches_system_command(text)
@@ -269,4 +288,3 @@ def handle_local_command(command, language: str = "en"):
         return app_answer
 
     return None
-

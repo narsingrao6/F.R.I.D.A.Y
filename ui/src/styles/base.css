@@ -1,0 +1,141 @@
+/* ============================================================
+   Base reset + app shell layout
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.35;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+input {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  outline: 0;
+}
+
+::selection {
+  background: rgba(53, 230, 255, 0.28);
+}
+
+/* -- thin holographic scrollbar --------------------------------- */
+.scroller {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(53, 230, 255, 0.42) transparent;
+}
+
+.scroller::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scroller::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 99px;
+}
+
+.scroller::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: linear-gradient(
+    180deg,
+    rgba(53, 230, 255, 0.75),
+    rgba(139, 92, 246, 0.6)
+  );
+  box-shadow: 0 0 8px rgba(53, 230, 255, 0.55);
+}
+
+/* ============================================================
+   Shell — header on top, three columns beneath
+   ============================================================ */
+
+.shell {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  padding: clamp(8px, 0.8vh, 14px) clamp(10px, 0.85vw, 18px)
+    clamp(6px, 0.7vh, 12px);
+  gap: clamp(6px, 0.7vh, 12px);
+  /* 3D depth foundation */
+  --px: 0;
+  --py: 0;
+  perspective: 1400px;
+  perspective-origin: 50% 46%;
+  transform-style: preserve-3d;
+}
+
+.stage-row {
+  display: grid;
+  grid-template-columns:
+    minmax(300px, 27.6vw)
+    minmax(0, 1fr)
+    minmax(288px, 26.4vw);
+  gap: clamp(10px, 0.95vw, 20px);
+  min-height: 0;
+  transform-style: preserve-3d;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  transform-style: preserve-3d;
+}
+
+.col-right {
+  gap: clamp(6px, 0.72vh, 12px);
+  overflow: visible;
+}
+
+/* Narrower desktops: keep three columns, shrink the sides. */
+@media (max-width: 1400px) {
+  .stage-row {
+    grid-template-columns:
+      minmax(268px, 26vw)
+      minmax(0, 1fr)
+      minmax(258px, 25vw);
+  }
+}
+
+@media (max-width: 1180px) {
+  body {
+    font-size: 15px;
+  }
+  .stage-row {
+    grid-template-columns:
+      minmax(238px, 25vw)
+      minmax(0, 1fr)
+      minmax(232px, 24vw);
+    gap: 8px;
+  }
+}

@@ -1,0 +1,248 @@
+/* ============================================================
+   Master 3D depth system — perspective, Z-layering, parallax,
+   floating animations, and depth-aware shadows.
+   ============================================================ */
+
+/* ---- root perspective ---------------------------------------- */
+.shell {
+  perspective: 1400px;
+  perspective-origin: 50% 46%;
+  transform-style: preserve-3d;
+}
+
+.stage-row {
+  transform-style: preserve-3d;
+}
+
+.col {
+  transform-style: preserve-3d;
+}
+
+/* ---- left column: cockpit wrap ------------------------------- */
+.col-left {
+  transform:
+    translateZ(18px)
+    rotateY(1.2deg)
+    translate(
+      calc(var(--px, 0) * -8px),
+      calc(var(--py, 0) * -5px)
+    );
+  transition: transform 0.1s linear;
+}
+
+/* ---- right column: cockpit wrap (mirrored) ------------------- */
+.col-right {
+  transform:
+    translateZ(18px)
+    rotateY(-1.2deg)
+    translate(
+      calc(var(--px, 0) * 8px),
+      calc(var(--py, 0) * -5px)
+    );
+  transition: transform 0.1s linear;
+}
+
+/* ---- header: hovering above ---------------------------------- */
+.hdr {
+  transform: translateZ(14px);
+  transform-style: preserve-3d;
+}
+
+.brand-frame {
+  transform: translateZ(4px);
+}
+
+.status-capsule {
+  transform: translateZ(6px);
+}
+
+.ai-badge {
+  transform: translateZ(4px);
+}
+
+/* ---- center stage: deep perspective well --------------------- */
+.stage {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  padding: clamp(10px, 1.8vh, 24px) 0 clamp(8px, 0.8vh, 13px);
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(33, 102, 255, 0.05) 0%, rgba(10, 18, 60, 0.04) 32%, transparent 66%),
+    linear-gradient(180deg, rgba(3, 8, 27, 0.05), rgba(1, 3, 13, 0.2));
+}
+
+/* Outer organic ring */
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 5% 4% 11%;
+  border: 1px solid rgba(75, 157, 255, 0.1);
+  border-radius: 48% 52% 44% 56%;
+  transform: rotate(-8deg) skewX(-7deg) translateZ(-30px);
+  box-shadow: inset 0 0 18px rgba(33, 113, 255, 0.06), 0 0 14px rgba(31, 96, 255, 0.05);
+  pointer-events: none;
+}
+
+/* Inner orbit ring */
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 12% 12% 22%;
+  border: 1px solid rgba(172, 97, 255, 0.08);
+  border-radius: 50%;
+  transform: rotate(23deg) scaleY(.58) translateZ(-20px);
+  box-shadow: 0 0 12px rgba(116, 67, 255, 0.07);
+  pointer-events: none;
+}
+
+/* ---- energy core: full-screen 3D background ------------------ */
+.energy-core-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100vw !important;
+  height: 100vh !important;
+  /* Push it deep into the background and scale up slightly to avoid edge clipping */
+  transform: translateZ(-100px) scale(1.15);
+  pointer-events: none;
+}
+
+.energy-core-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ---- stage HUD overlay layers -------------------------------- */
+.stage-frame {
+  z-index: 3;
+  pointer-events: none;
+  transform: translateZ(80px);
+}
+
+.stage-caption {
+  z-index: 4;
+  transform: translateZ(110px);
+  text-shadow: 0 0 10px rgba(71, 216, 255, .25);
+}
+
+/* ---- control deck: console shelf ----------------------------- */
+.ctl-deck {
+  perspective: 900px;
+  transform: translateZ(22px) rotateX(4deg);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, .5),
+    0 0 34px rgba(34, 136, 255, .18),
+    inset 0 0 44px -10px rgba(90, 220, 255, 0.7);
+  background: linear-gradient(180deg, rgba(10, 25, 74, .78), rgba(3, 9, 31, .9));
+}
+
+.ctl-deck::before {
+  opacity: .95;
+  transform: translateZ(8px);
+}
+
+.ctl {
+  transform: translateZ(18px);
+}
+
+/* ---- right panels: staggered Z + float ----------------------- */
+.p-status {
+  transform: translateZ(8px);
+  animation: panel-float-a 7s ease-in-out infinite alternate;
+}
+
+.p-speaker {
+  transform: translateZ(14px);
+  animation: panel-float-b 8s ease-in-out infinite alternate;
+}
+
+.p-lang {
+  transform: translateZ(10px);
+  animation: panel-float-c 6.5s ease-in-out infinite alternate;
+}
+
+.p-voice {
+  transform: translateZ(12px);
+  animation: panel-float-d 7.5s ease-in-out infinite alternate;
+}
+
+.p-metrics {
+  transform: translateZ(16px);
+  animation: panel-float-e 8.5s ease-in-out infinite alternate;
+}
+
+/* conversation panel floats too */
+.conv {
+  transform: translateZ(6px);
+  animation: panel-float-f 9s ease-in-out infinite alternate;
+}
+
+/* ---- floating keyframes (subtle Z oscillation) --------------- */
+@keyframes panel-float-a {
+  from { transform: translateZ(8px)  translateY(0); }
+  to   { transform: translateZ(12px) translateY(-3px); }
+}
+
+@keyframes panel-float-b {
+  from { transform: translateZ(14px) translateY(0); }
+  to   { transform: translateZ(18px) translateY(-4px); }
+}
+
+@keyframes panel-float-c {
+  from { transform: translateZ(10px) translateY(0); }
+  to   { transform: translateZ(14px) translateY(-2.5px); }
+}
+
+@keyframes panel-float-d {
+  from { transform: translateZ(12px) translateY(0); }
+  to   { transform: translateZ(16px) translateY(-3px); }
+}
+
+@keyframes panel-float-e {
+  from { transform: translateZ(16px) translateY(0); }
+  to   { transform: translateZ(20px) translateY(-4px); }
+}
+
+@keyframes panel-float-f {
+  from { transform: translateZ(6px)  translateY(0); }
+  to   { transform: translateZ(10px) translateY(-3px); }
+}
+
+/* ---- depth-aware shadows on all panels ----------------------- */
+.col-left .hud,
+.col-right .hud {
+  box-shadow:
+    0 0 0 var(--hair) color-mix(in srgb, var(--accent) 34%, transparent),
+    0 0 18px color-mix(in srgb, var(--accent) calc(var(--glow) * 28%), transparent),
+    0 0 46px -6px color-mix(in srgb, var(--accent) calc(var(--glow) * 22%), transparent),
+    inset 0 0 26px -8px color-mix(in srgb, var(--accent) 32%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    /* depth shadow — bigger & softer the further forward */
+    0 12px 35px -8px rgba(0, 0, 0, 0.45),
+    0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 980px) {
+  .col-left,
+  .col-right {
+    transform: translateZ(10px) rotateY(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .energy-core-canvas { filter: none; }
+
+  .p-status,
+  .p-speaker,
+  .p-lang,
+  .p-voice,
+  .p-metrics,
+  .conv {
+    animation: none;
+  }
+
+  .col-left,
+  .col-right {
+    transition: none;
+  }
+}

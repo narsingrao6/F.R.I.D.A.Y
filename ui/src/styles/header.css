@@ -1,0 +1,391 @@
+/* ============================================================
+   Top header — brand, processing status, AI ACTIVE
+   ============================================================ */
+
+.hdr {
+  display: grid;
+  grid-template-columns: minmax(300px, 27.6vw) minmax(0, 1fr) minmax(288px, 26.4vw);
+  align-items: start;
+  gap: clamp(10px, 0.95vw, 20px);
+  transform: translateZ(14px);
+}
+
+/* -- brand ------------------------------------------------------- */
+.brand-frame {
+  position: relative;
+  padding: clamp(6px, 0.7vh, 11px) clamp(14px, 1.1vw, 22px)
+    clamp(7px, 0.75vh, 12px);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 196, 96, 0.08), rgba(255, 120, 60, 0.02)),
+    rgba(8, 10, 26, 0.3);
+  box-shadow:
+    0 0 0 1px rgba(251, 175, 36, 0.45),
+    0 0 22px -4px rgba(251, 140, 36, 0.38),
+    inset 0 0 28px -10px rgba(255, 190, 90, 0.55),
+    /* depth lift */
+    0 8px 24px -4px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  --accent: var(--amber);
+  transform: translateZ(4px);
+}
+
+.brand-name {
+  margin: 0;
+  font-family: var(--font-hud);
+  font-weight: 900;
+  font-size: clamp(23px, 2.42vw, 46px);
+  line-height: 1.02;
+  letter-spacing: 0.028em;
+  white-space: nowrap;
+  background: linear-gradient(
+    96deg,
+    #ffb347 0%,
+    #ff7ac3 21%,
+    #c77dff 43%,
+    #56e1ff 71%,
+    #4d8bff 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(0 0 10px rgba(120, 190, 255, 0.5))
+    drop-shadow(0 0 26px rgba(180, 110, 255, 0.34));
+  background-size: 220% 100%;
+  animation: brand-shift 14s ease-in-out infinite alternate;
+}
+
+@keyframes brand-shift {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+.brand-tag {
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 0.42vw, 9px);
+  margin: clamp(2px, 0.35vh, 6px) 0 0;
+  font-family: var(--font-hud);
+  font-size: clamp(7.6px, 0.63vw, 12px);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: #b9d7ef;
+  text-shadow: 0 0 9px rgba(120, 200, 255, 0.45);
+  white-space: nowrap;
+}
+
+.brand-tag b {
+  color: var(--cyan);
+  text-shadow: 0 0 8px var(--cyan);
+}
+
+/* -- centre column ---------------------------------------------- */
+.hdr-center {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(2px, 0.3vh, 5px);
+  padding-top: 2px;
+  min-width: 0;
+}
+
+.hdr-rail {
+  position: absolute;
+  inset: 8px 0 auto;
+  height: 26px;
+  pointer-events: none;
+}
+
+.rail-line {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 32%;
+  border-top: 1px solid rgba(80, 190, 255, 0.38);
+  box-shadow: 0 0 12px -2px rgba(70, 180, 255, 0.5);
+}
+
+.rail-line.l {
+  left: 0;
+  border-left: 1px solid rgba(80, 190, 255, 0.34);
+  border-top-left-radius: 3px;
+  clip-path: polygon(0 0, 100% 0, 100% 3px, 14px 3px, 0 34%);
+}
+
+.rail-line.r {
+  right: 0;
+  border-right: 1px solid rgba(80, 190, 255, 0.34);
+  border-top-right-radius: 3px;
+  clip-path: polygon(0 0, 100% 0, 100% 34%, calc(100% - 14px) 3px, 0 3px);
+}
+
+/* -- status capsule --------------------------------------------- */
+.status-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: clamp(5px, 0.55vw, 12px);
+  min-width: 0;
+}
+
+.status-capsule {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.6vw, 12px);
+  padding: clamp(5px, 0.6vh, 10px) clamp(16px, 1.5vw, 32px);
+  /* the element itself is the gradient hairline… */
+  background: linear-gradient(
+    90deg,
+    rgba(80, 210, 255, 0.9),
+    rgba(130, 165, 255, 0.5) 48%,
+    rgba(80, 210, 255, 0.9)
+  );
+  clip-path: polygon(
+    16px 0,
+    calc(100% - 16px) 0,
+    100% 50%,
+    calc(100% - 16px) 100%,
+    16px 100%,
+    0 50%
+  );
+  filter: drop-shadow(0 0 14px rgba(53, 200, 255, 0.4));
+}
+
+/* …and this inset copy punches the dark glass back in. */
+.status-capsule::before {
+  content: '';
+  position: absolute;
+  inset: 1.4px;
+  background:
+    linear-gradient(180deg, rgba(64, 196, 255, 0.17), rgba(18, 52, 140, 0.08)),
+    rgba(5, 10, 30, 0.92);
+  box-shadow: inset 0 0 22px -6px rgba(70, 200, 255, 0.7);
+  clip-path: polygon(
+    15px 0,
+    calc(100% - 15px) 0,
+    100% 50%,
+    calc(100% - 15px) 100%,
+    15px 100%,
+    0 50%
+  );
+  pointer-events: none;
+}
+
+.status-capsule > * {
+  position: relative;
+  z-index: 1;
+}
+
+.status-orb {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--amber-hot);
+  box-shadow:
+    0 0 8px var(--amber),
+    0 0 18px -2px var(--amber);
+  animation: orb-throb 1.5s var(--ease-hud) infinite alternate;
+}
+
+@keyframes orb-throb {
+  from {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+.status-text {
+  font-family: var(--font-hud);
+  font-size: clamp(11px, 1.06vw, 21px);
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  color: #8fe9ff;
+  text-shadow:
+    0 0 12px rgba(53, 230, 255, 0.75),
+    0 0 30px rgba(53, 230, 255, 0.35);
+  white-space: nowrap;
+}
+
+/* -- energy pips ------------------------------------------------- */
+.pips {
+  display: flex;
+  align-items: center;
+  gap: clamp(3px, 0.34vw, 7px);
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.pips.left {
+  justify-content: flex-end;
+}
+
+.pips i {
+  --i: 0;
+  --n: 7;
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cyan);
+  opacity: calc(0.22 + 0.72 * (var(--i) / var(--n)));
+  box-shadow: 0 0 7px color-mix(in srgb, var(--cyan) 80%, transparent);
+  animation: pip-run 2.4s var(--ease-hud) infinite;
+  animation-delay: calc(var(--i) * 0.11s);
+}
+
+.pips.right i {
+  opacity: calc(0.94 - 0.72 * (var(--i) / var(--n)));
+  background: var(--blue);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--blue) 80%, transparent);
+}
+
+@keyframes pip-run {
+  0%,
+  72%,
+  100% {
+    transform: scale(1);
+  }
+  36% {
+    transform: scale(1.75);
+    filter: brightness(1.6);
+  }
+}
+
+/* -- chevrons flanking the capsule ------------------------------- */
+.chev {
+  flex: none;
+  width: 9px;
+  height: clamp(16px, 1.5vh, 26px);
+  border: 1.5px solid rgba(90, 210, 255, 0.62);
+  filter: drop-shadow(0 0 6px rgba(53, 200, 255, 0.6));
+}
+
+.chev.l {
+  border-right: 0;
+  border-radius: 4px 0 0 4px;
+}
+
+.chev.r {
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+}
+
+/* -- clock ------------------------------------------------------- */
+.clock {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(5px, 0.55vw, 11px);
+  font-family: var(--font-body);
+  font-size: clamp(11px, 1.02vw, 20px);
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  color: #dfeaff;
+  text-shadow: 0 0 14px rgba(120, 190, 255, 0.4);
+  white-space: nowrap;
+}
+
+.clock b {
+  color: var(--cyan);
+  opacity: 0.85;
+  text-shadow: 0 0 8px var(--cyan);
+}
+
+.clock-time {
+  color: #ffffff;
+}
+
+/* -- AI ACTIVE badge --------------------------------------------- */
+.hdr-status {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
+.ai-badge {
+  --accent: var(--cyan);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.85vw, 17px);
+  padding: clamp(7px, 0.82vh, 14px) clamp(13px, 1.15vw, 24px);
+  border-radius: 13px;
+  background:
+    linear-gradient(180deg, rgba(70, 200, 255, 0.14), rgba(20, 60, 150, 0.05)),
+    rgba(6, 11, 30, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 0 0 1px rgba(64, 214, 255, 0.55),
+    0 0 18px -6px rgba(53, 200, 255, 0.45),
+    inset 0 0 30px -12px rgba(90, 220, 255, 0.6),
+    /* depth lift */
+    0 8px 22px -4px rgba(0, 0, 0, 0.35);
+  transform: translateZ(6px);
+}
+
+/* The breath lives on an overlay that only fades in and out. Animating the
+   badge's own box-shadow would invalidate its backdrop-filter every frame,
+   forcing the blur behind it to be recomputed 60 times a second. */
+.ai-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px rgba(64, 214, 255, 0.3),
+    0 0 26px -5px rgba(53, 200, 255, 0.52),
+    inset 0 0 30px -9px rgba(90, 220, 255, 0.5);
+  animation: badge-breathe 4.6s var(--ease-hud) infinite alternate;
+}
+
+@keyframes badge-breathe {
+  from {
+    opacity: 0.14;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ai-wave {
+  height: clamp(15px, 1.5vh, 26px);
+}
+
+.ai-text {
+  font-family: var(--font-hud);
+  font-size: clamp(12px, 1.16vw, 24px);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #ffffff;
+  text-shadow: 0 0 16px rgba(140, 220, 255, 0.6);
+  white-space: nowrap;
+}
+
+.ai-badge .dot {
+  width: 10px;
+  height: 10px;
+}
+
+@media (max-width: 1180px) {
+  .hdr {
+    grid-template-columns: minmax(238px, 25vw) minmax(0, 1fr) minmax(232px, 24vw);
+    gap: 8px;
+  }
+}

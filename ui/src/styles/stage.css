@@ -1,0 +1,322 @@
+/* ============================================================
+   Centre column — energy core stage + state caption
+   ============================================================ */
+
+.col-center {
+  gap: clamp(6px, 0.62vh, 10px);
+  position: relative;
+}
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: clamp(6px, 0.78vh, 13px);
+  isolation: isolate;
+  overflow: visible;
+  transform-style: preserve-3d;
+}
+
+.stage::before,
+.stage::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.stage::before {
+  inset: 1.5% 0 8.5%;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, transparent 0 6%, rgba(53, 230, 255, 0.14) 6.2%, transparent 6.8% 93.2%, rgba(164, 92, 255, 0.12) 93.8%, transparent 94.5%),
+    linear-gradient(180deg, rgba(58, 147, 255, 0.08), transparent 12% 87%, rgba(169, 74, 255, 0.06)),
+    radial-gradient(92% 72% at 50% 45%, transparent 42%, rgba(50, 160, 255, 0.06) 58%, transparent 75%);
+  box-shadow:
+    inset 0 0 0 1px rgba(52, 204, 255, 0.1),
+    inset 0 0 48px rgba(48, 111, 255, 0.05);
+  clip-path: polygon(4% 0, 96% 0, 100% 7%, 100% 93%, 96% 100%, 4% 100%, 0 93%, 0 7%);
+  opacity: 0.16;
+}
+
+.stage::after {
+  left: 7%;
+  right: 7%;
+  bottom: 7%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(53, 230, 255, 0.4), rgba(255, 176, 48, 0.3), rgba(167, 80, 255, 0.34), transparent);
+  box-shadow: 0 0 6px rgba(53, 230, 255, 0.28);
+  opacity: 0.4;
+}
+
+/* The WebGL canvas fills the stage only, so panels never sit over it. */
+.core-canvas {
+  position: absolute;
+  inset: -16% -12% -4%;
+  z-index: 0;
+}
+
+.stage-frame {
+  position: absolute;
+  inset: 2.5% 3% 7.5%;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 8px;
+  mix-blend-mode: screen;
+}
+
+.stage-frame::before,
+.stage-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.stage-frame::before {
+  background:
+    repeating-radial-gradient(ellipse at 50% 48%, transparent 0 44px, rgba(80, 188, 255, 0.08) 45px 46px, transparent 47px 72px),
+    linear-gradient(90deg, transparent 49.8%, rgba(63, 220, 255, 0.07) 50%, transparent 50.2%),
+    linear-gradient(180deg, transparent 49.8%, rgba(122, 86, 255, 0.06) 50%, transparent 50.2%);
+  opacity: 0.22;
+  animation: stage-radar-spin 34s linear infinite;
+  transform-origin: center;
+}
+
+.stage-frame::after {
+  background:
+    linear-gradient(115deg, transparent 0 18%, rgba(63, 220, 255, 0.05) 18.2%, transparent 18.6% 38%, rgba(151, 89, 255, 0.04) 38.2%, transparent 38.6%),
+    radial-gradient(80% 52% at 50% 50%, rgba(16, 57, 140, 0.05), transparent 68%);
+  opacity: 0.28;
+}
+
+.stage-ring {
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  border-radius: 50%;
+  border: 1px solid rgba(76, 205, 255, 0.16);
+  box-shadow:
+    0 0 12px rgba(53, 230, 255, 0.12),
+    inset 0 0 14px rgba(139, 92, 246, 0.08);
+  transform: translate(-50%, -50%) rotate(var(--r, 0deg));
+}
+
+.ring-a {
+  width: min(78%, 720px);
+  aspect-ratio: 1 / 0.48;
+  --r: -9deg;
+  transform: translate(-50%, -50%) rotate(-9deg) translateZ(-15px);
+}
+
+.ring-b {
+  width: min(92%, 840px);
+  aspect-ratio: 1 / 0.4;
+  border-color: rgba(163, 91, 255, 0.38);
+  --r: 11deg;
+  transform: translate(-50%, -50%) rotate(11deg) translateZ(-25px);
+}
+
+.ring-c {
+  width: min(64%, 590px);
+  aspect-ratio: 1 / 0.58;
+  border-color: rgba(66, 132, 255, 0.36);
+  --r: 0deg;
+  transform: translate(-50%, -50%) rotate(0deg) translateZ(-8px);
+}
+
+.ring-d {
+  width: min(110%, 1000px);
+  aspect-ratio: 1 / 0.35;
+  border-color: rgba(53, 180, 255, 0.2);
+  --r: -5deg;
+  border-style: dashed;
+  transform: translate(-50%, -50%) rotate(-5deg) translateZ(-40px);
+}
+
+.ring-e {
+  width: min(52%, 470px);
+  aspect-ratio: 1 / 0.65;
+  border-color: rgba(140, 80, 255, 0.28);
+  --r: 7deg;
+  transform: translate(-50%, -50%) rotate(7deg) translateZ(-5px);
+}
+
+.ring-f {
+  width: min(45%, 410px);
+  aspect-ratio: 1 / 0.7;
+  border-color: rgba(53, 210, 255, 0.22);
+  --r: -3deg;
+  border-style: dashed;
+  transform: translate(-50%, -50%) rotate(-3deg) translateZ(-12px);
+}
+
+.ring-g {
+  width: min(85%, 780px);
+  aspect-ratio: 1 / 0.44;
+  border-color: rgba(100, 70, 255, 0.24);
+  --r: 14deg;
+  transform: translate(-50%, -50%) rotate(14deg) translateZ(-30px);
+}
+
+.stage-scanline {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(60, 205, 255, 0.3), transparent);
+  box-shadow: 0 0 8px rgba(60, 205, 255, 0.18);
+  opacity: 0.35;
+}
+
+.stage-bracket {
+  position: absolute;
+  top: 49%;
+  width: 17%;
+  height: 16%;
+  border-top: 1px solid rgba(77, 200, 255, 0.26);
+  border-bottom: 1px solid rgba(144, 92, 255, 0.22);
+  opacity: 0.5;
+}
+
+.bracket-l {
+  left: 3%;
+  border-left: 2px solid rgba(77, 200, 255, 0.3);
+  clip-path: polygon(0 0, 100% 0, 86% 100%, 0 100%);
+}
+
+.bracket-r {
+  right: 3%;
+  border-right: 2px solid rgba(77, 200, 255, 0.3);
+  clip-path: polygon(14% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+@keyframes stage-radar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Side columns paint above the core's glow bleed, never across the core. */
+.col-left,
+.col-right {
+  position: relative;
+  z-index: 1;
+}
+
+.core-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+}
+
+/* -- state caption ---------------------------------------------- */
+.stage-caption {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 0.9vw, 20px);
+  width: 100%;
+  pointer-events: none;
+}
+
+.cap-text {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(28px, 2.55vw, 50px);
+  letter-spacing: 0;
+  line-height: 1;
+  white-space: nowrap;
+  background: linear-gradient(96deg, #7fc6e0 0%, #4b9ed0 40%, #576aa8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(0 0 6px rgba(90, 200, 255, 0.16))
+    drop-shadow(0 0 12px rgba(70, 150, 255, 0.1));
+  animation: cap-pulse 2.5s var(--ease-hud) infinite alternate;
+}
+
+/* Only opacity moves: the drop-shadows above are already at the mid point of
+   the old swing, and re-rasterising a text filter every frame is not worth
+   the extra couple of pixels of glow travel. */
+@keyframes cap-pulse {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.stage-caption.is-thinking .cap-text {
+  animation-duration: 1.5s;
+}
+
+.stage-caption.is-listening .cap-text {
+  background: linear-gradient(96deg, #b7f7ff 0%, #47e6ff 55%, #35c8ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation-duration: 1.05s;
+}
+
+.stage-caption.is-speaking .cap-text {
+  background: linear-gradient(96deg, #d7f5ff 0%, #86b4ff 50%, #c08cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation-duration: 0.85s;
+}
+
+.stage-caption.is-idle .cap-text {
+  animation-duration: 4.5s;
+}
+
+/* -- pips flanking the caption ---------------------------------- */
+.cap-pips {
+  display: flex;
+  align-items: center;
+  gap: clamp(5px, 0.46vw, 10px);
+}
+
+.cap-pips i {
+  --i: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  animation: cap-pip 1.8s var(--ease-hud) infinite;
+  animation-delay: calc(var(--i) * 0.13s);
+}
+
+.cap-pips.l i {
+  opacity: calc(0.3 + 0.14 * var(--i));
+}
+
+.cap-pips.r i {
+  background: var(--blue);
+  box-shadow: 0 0 8px var(--blue);
+  opacity: calc(0.95 - 0.14 * var(--i));
+}
+
+@keyframes cap-pip {
+  0%,
+  68%,
+  100% {
+    transform: scale(0.9);
+  }
+  34% {
+    transform: scale(1.55);
+    filter: brightness(1.5);
+  }
+}

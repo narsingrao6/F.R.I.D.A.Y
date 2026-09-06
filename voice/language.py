@@ -126,44 +126,91 @@ MIX_MARKERS = ENGLISH_MARKERS - _WAKE_WORDS
 
 # Distinctive Romanized Telugu. One of these is enough to decide.
 TELUGU_STRONG = {
+    # --- Pronouns & address ---
     "naku", "naaku", "naaaku", "nenu", "nuvvu", "neevu", "nuvu",
     "meeru", "manam", "vaadu", "vallu", "vaallu", "atanu", "aame",
     "nannu", "naadi", "maaku", "meeku", "memu", "manaki", "thanu",
+    # --- Need / want ---
     "kavali", "kaavali", "kaavaali", "kavalani", "kaavalani", "kavala",
+    # --- Telling / saying ---
     "cheppu", "cheppandi", "chepthanu", "cheptha", "cheppara",
     "cheppava", "cheppali", "cheppagalara", "chebutunna",
+    # --- Question words ---
     "enti", "emiti", "emiiti", "endhuku", "enduku", "eppudu",
     "ekkada", "ikkada", "akkada", "evaru", "entha", "ento", "enno",
+    # --- Time / days ---
     "ivala", "ivvala", "ivaala", "repu", "ninna", "nedu", "monna",
+    # --- Going / coming ---
     "vellali", "vellala", "vellalsina", "veldam", "vellandi", "vellanu",
     "veltunna", "veltunnanu", "vellipoya", "vellava",
+    "vastunna", "vasthunna", "vastha", "vachindi", "vachhindi",
+    "raavali", "raavandi", "ravali", "ravandi",
+    # --- Doing ---
     "chestunna", "chestunnav", "chestunnaru", "chesanu", "chesav",
     "chesavu", "chestha", "chesthanu", "cheyyali", "cheyali", "cheyyandi",
     "cheyyi", "cheyyu", "chey", "cheyi", "cheddam", "chesukunna",
+    # --- Yes / no / existence ---
     "avunu", "avunandi", "kaadu", "kadhu", "ledu", "ledhu", "levu",
     "undi", "undhi", "undha", "unnanu", "unnav", "unnavu", "unnaru",
     "unnadu", "vundi", "vunnanu",
+    # --- How are you / feeling ---
     "bagunnara", "baagunnara", "bagunnava", "bagundi", "baagundi",
     "bagoledu", "baaledu",
+    # --- This / that / now / then ---
     "idhi", "adhi", "edhi", "ippudu", "appudu", "tarvatha", "taruvata",
+    # --- A little / memory ---
     "konchem", "koncham", "koddiga", "gurthu", "gurthundi", "gnapakam",
+    # --- Adjectives / pace ---
     "kalisi", "kotha", "chinna", "pedda", "thondaraga", "mellaga",
+    # --- Don't / look / hear ---
     "vaddu", "choodu", "chudu", "chuddam", "chudandi", "vinu", "vinnanu",
+    # --- Let's go / know ---
     "randi", "podam", "telusu", "telisa", "telusa", "teliyadu",
     "teliyada", "telidu", "artham", "ardham", "kosam", "gurinchi",
+    # --- More / but / if ---
     "inka", "inkaa", "kani", "gani", "ante", "antey", "anta", "anthaa",
     "aithe", "aite", "ayite", "ayina", "ayyo", "ammo", "abbo", "avunaa",
+    # --- Amount / name ---
     "ekkuva", "thakkuva", "ekkuvaga", "sepu", "peru", "sunna",
+    # --- Numbers ---
     "okka", "oka", "okati", "rendu", "moodu", "naalugu", "aidu",
+    "aaru", "eedu", "enimidi", "thommidi", "padi",
+    # --- What happened / also ---
     "emaindi", "emandi", "emo", "kudaa", "kooda", "emaina", "edaina",
     "evaraina", "eppatiki", "sahayam", "sahaayam", "vatavaranam",
     "vaatavaranam", "samayam", "samayaniki", "gantalaku", "nimishalu",
+    # --- Put / take / stop / give / send / ask ---
     "pettu", "pettandi", "pettuko", "teesuko", "teeyi", "aapu", "aagu",
     "ivvu", "ivvandi", "pampu", "pampandi", "adagu", "adigandi",
-    "vachindi", "vachhindi", "vastunna", "vasthunna", "vastha",
+    # --- Truth / total / need ---
     "nijamga", "nijam", "asalu", "sarigga", "motham", "avasaram",
     "marchipoya", "matladu", "matladutunna", "matladtunna",
+    # --- Family / misc ---
     "ayya", "amma", "anna", "chusko", "paduko", "rara", "povali", "podham",
+    "tinnava", "em", "babu", "thalli", "cheppina", "chebite", "chebithe",
+    "vinnava", "vinte", "vintava", "vintunna", "vintunnanu",
+    "matladatavu", "matladaku", "oddu", "vaddhu", "chustunna", "chustunnanu",
+    "chustava", "navvu", "edupu", "kopam", "prasantham", "karchu", "dabbu",
+    "dabbulu", "aakali", "nidra",
+    # --- Food / body / household ---
+    "annam", "pappu", "koora", "neellu", "paalu", "perugu", "puvvu",
+    "chettlu", "nela", "gaddi", "batta", "battalu", "gudi", "manishi",
+    "manushulu", "pillalu", "ammayi", "abbayi", "aatalu", "paatalu",
+    # --- Emotions / states ---
+    "santosham", "baadha", "bhayam", "aanandam", "kastam", "ishtam",
+    "premam", "premaincham", "mosam", "manchi", "chedda",
+    # --- Directions / positions ---
+    "edhuru", "venakal", "mundhu", "vaipu", "digguna",
+    "paiki", "kindiki", "loniki", "bayatiki", "pakkaki",
+    # --- Actions (extended) ---
+    "paduko", "levu", "kurccho", "nilabadu", "parigettu",
+    "konukkoni", "ammukoni", "kottu", "thaagu", "thinu", "kadigu",
+    "uttaramivu", "pampinchandi", "panicheyyi", "panichesuko",
+    # --- Common phrases ---
+    "emchestunnav", "ekkadunnav", "ekkadiki", "eppudochav",
+    "nuvvochav", "nuvvellav", "endukante", "anduvalla", "daniki",
+    "vaadiki", "aavida", "aayina", "kaakapote", "ippatidaaka",
+    "mundunundi", "tarvathane", "ventane", "chivariki",
     # App/action command verbs — Telugu-exclusive
     "thiyu", "tiyyandi", "therivu", "aapeyyi", "aapeyi",
     "chesuko", "cheseyyi", "pampinchu", "choostu",
@@ -191,34 +238,47 @@ TELUGU_SUFFIX = (
 # ------------------------------------------------------------------ Hindi
 
 HINDI_STRONG = {
+    # --- Pronouns ---
     "mujhe", "mujhko", "mujhse", "mujhpe", "hum", "hume", "humein",
     "hamein", "hamko", "humko", "hamara", "humara", "hamari",
     "tum", "tumhe", "tumhein", "tumko", "tumhara", "tumhari",
     "aap", "aapko", "aapka", "aapki", "aapse", "aapne",
+    # --- Question words ---
     "kya", "kyun", "kyon", "kyu", "kyunki", "kyonki",
     "kaise", "kaisa", "kaisi", "kaha", "kahan", "kaun", "kaunsa",
     "kitna", "kitni", "kitne", "kabhi",
+    # --- Want / need ---
     "chahiye", "chaahiye", "chahiya", "chahta", "chahti", "chahte",
+    # --- Telling ---
     "batao", "bataao", "bataiye", "bataye", "batana", "bata", "batado",
+    # --- Doing ---
     "karna", "karni", "karne", "karenge", "karunga", "karungi",
     "karta", "karti", "karte", "karo", "kariye", "kijiye", "kiya",
+    # --- Being / becoming ---
     "hoga", "hogi", "honge", "hona", "hota", "hoti", "hote", "hokar",
     "raha", "rahi", "rahe", "rahega", "rahegi", "rahunga",
+    # --- Going / coming ---
     "gaya", "gayi", "gaye", "jaana", "jana", "jaunga", "jaoge",
     "aaunga", "aaoge", "aaya", "aayi", "aaye", "aana",
+    # --- Yes / no / feelings ---
     "nahi", "nahin", "nahee", "haan", "accha", "acha", "achha",
     "achcha", "badhiya", "bekar", "theek", "thik", "bilkul",
     "zaroor", "jaroor", "matlab", "shayad", "zaroorat", "zarurat",
     "samajh", "samjha", "samajhta", "bahut", "bohot", "bahot",
     "thoda", "thodi", "jaldi", "abhi", "parso", "kripya", "zara",
+    # --- Places ---
     "yahan", "wahan", "vahan", "idhar", "udhar", "kahin",
+    # --- Conjunctions / misc ---
     "kuch", "kuchh", "sabhi", "phir", "fir", "lekin", "magar",
     "aur", "agar", "isliye", "warna", "toh", "bhi", "dobara",
+    # --- Give / take / show / play ---
     "dena", "lena", "dedo", "lelo", "dijiye", "diya", "dikhao",
     "dikhaao", "sunao", "bajao", "bajaao", "chalao", "kholo", "khol", "kholna", "chalu",
     "bhejo", "bhej", "padho", "likho", "karke", "uthna", "utho",
+    # --- Let's go / greetings ---
     "chalo", "chaliye", "kaam", "baat", "baatein", "madad",
     "shukriya", "dhanyavaad", "namaste", "yaar", "bhai", "arre",
+    # --- Time / weather ---
     "waqt", "samay", "khana", "peena", "suno", "suniye", "dekho",
     "dekhiye", "bola", "boli", "bolo", "milega", "milegi", "chahe",
     "hain", "hoon", "hun", "hai", "yeh", "woh", "jaisa", "jaise",
@@ -226,6 +286,33 @@ HINDI_STRONG = {
     "khabar", "samachar", "paise", "rupaye", "ghante", "baje",
     "hafta", "mahina", "saal", "tarikh", "pichle", "agla", "agle",
     "wapas", "phirse", "turant", "mushkil", "aasan", "asaan",
+    # --- Extended pronouns / ownership ---
+    "mera", "mere", "tune", "tera", "teri", "tere", "unhone", "isne", "usne", "kisne",
+    "koshish", "aajkal", "bahar", "andar", "upar", "neeche", "samjhe",
+    "sunne", "bolne", "socho", "kahiye",
+    "aao", "jao", "lao", "khao", "peeyo", "sone", "jaagne",
+    "raasta", "safar", "manzil", "dost", "dosti", "pyar", "bhookh", "pyaas",
+    # --- Emotions / states ---
+    "khushi", "dukh", "gussa", "darr", "fikar", "chinta", "himmat",
+    "hausla", "umeed", "vishwas", "bharosa", "yakeen",
+    # --- Family ---
+    "maa", "papa", "pitaji", "mataji", "behen", "didi", "bhaiya",
+    "chacha", "chachi", "mama", "mami", "nana", "nani", "dada", "dadi",
+    "beta", "beti", "baccha", "bachche", "bachchi", "parivar",
+    # --- Food / drink ---
+    "roti", "chawal", "daal", "sabzi", "chai", "dudh", "phal",
+    "mithai", "namak", "mirch", "cheeni", "lassi", "achaar",
+    # --- Body / health ---
+    "bukhar", "dard", "sar", "pet", "haath", "pair", "aankh",
+    "kaan", "naak", "muh", "gala", "sehat", "bimaar", "dawai",
+    # --- Household ---
+    "kamra", "darwaza", "khidki", "kursi", "mez", "bistar",
+    "kapde", "joote", "chaabi", "tala", "safai", "bartan",
+    # --- Directions ---
+    "seedha", "dayen", "bayen", "aage", "peeche", "beech",
+    # --- Daily life ---
+    "neend", "sapna", "naha", "dho", "saaf", "ganda",
+    "tayyar", "shuru", "khatam", "poora", "aadha",
     # App/action command verbs — Hindi-exclusive
     "khol", "kholna", "kholke", "khulwa", "chalu", "chalana",
     "hatao", "hataiye", "dikhana", "dikha", "sunna", "sunaiye",

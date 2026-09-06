@@ -9,10 +9,16 @@ import onnxruntime as ort
 
 from voice import dsp, fbank
 
-# Paths
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import sys
+
+if getattr(sys, 'frozen', False):
+    _BASE_DIR = sys._MEIPASS
+else:
+    _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 MODEL_PATH = os.path.join(_BASE_DIR, "models", "voxceleb_resnet34_LM.onnx")
-PROFILE_PATH = os.path.join(_BASE_DIR, "speaker_profile.npy")
+PROFILE_PATH = os.path.join(os.getcwd(), "speaker_profile.npy") # Keep profile in cwd to persist
+
 
 # Tunable threshold for the cosine similarity.
 # For raw cosine similarity on VoxCeleb ResNet34, genuine trials often sit

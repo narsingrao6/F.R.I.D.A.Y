@@ -1,0 +1,299 @@
+/* ============================================================
+   Left column — conversation transcript
+   ============================================================ */
+
+.conv {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.conv-body {
+  gap: clamp(7px, 0.8vh, 13px);
+}
+
+.conv-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  list-style: none;
+  margin: 0;
+  padding: clamp(4px, 0.5vh, 9px) 4px clamp(2px, 0.3vh, 5px) 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(7px, 0.82vh, 14px);
+  scroll-behavior: smooth;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 6px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 6px),
+    transparent 100%
+  );
+}
+
+.conv-end {
+  height: 1px;
+  flex: none;
+}
+
+/* -- rows -------------------------------------------------------- */
+.msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: msg-in 0.6s var(--ease-out) both;
+  transform-style: preserve-3d;
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) translateZ(-20px) scale(0.97);
+  }
+}
+
+.msg.is-user {
+  justify-content: flex-end;
+  padding-left: clamp(14px, 4%, 44px);
+}
+
+.msg.is-friday,
+.msg.is-action {
+  justify-content: flex-start;
+  padding-right: clamp(10px, 3%, 34px);
+}
+
+/* -- bubbles ----------------------------------------------------- */
+.bub {
+  --edge: rgba(96, 190, 255, 0.5);
+  --wash: rgba(16, 34, 74, 0.5);
+  --halo: rgba(60, 160, 255, 0.3);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: clamp(7px, 0.82vh, 13px) clamp(10px, 0.85vw, 16px);
+  border-radius: 11px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 60%),
+    var(--wash);
+  box-shadow:
+    0 0 0 1px var(--edge),
+    0 0 18px -5px var(--halo),
+    inset 0 0 22px -10px var(--halo),
+    /* depth lift */
+    0 6px 16px -4px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.34s var(--ease-out),
+    box-shadow 0.34s var(--ease-hud);
+  max-width: 100%;
+}
+
+.msg:hover .bub {
+  transform: translateY(-2px) translateZ(6px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--edge) 100%, white 22%),
+    0 0 30px -5px var(--halo),
+    inset 0 0 26px -8px var(--halo),
+    0 10px 28px -4px rgba(0, 0, 0, 0.45);
+}
+
+.bub-text {
+  font-size: clamp(12px, 0.88vw, 16px);
+  font-weight: 500;
+  line-height: 1.28;
+  color: #eef6ff;
+  overflow-wrap: anywhere;
+}
+
+.bub.is-indic .bub-text {
+  font-family: var(--font-indic);
+  font-size: clamp(11.5px, 0.84vw, 15px);
+}
+
+.msg.is-stacked .bub {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+/* per-kind palettes */
+.msg.is-friday .bub {
+  --edge: rgba(163, 122, 255, 0.6);
+  --wash: rgba(38, 22, 84, 0.46);
+  --halo: rgba(150, 90, 255, 0.42);
+}
+
+.msg.is-action .bub {
+  --edge: rgba(64, 226, 190, 0.55);
+  --wash: rgba(11, 44, 52, 0.46);
+  --halo: rgba(52, 217, 165, 0.36);
+}
+
+.msg.is-user .bub {
+  --edge: rgba(96, 190, 255, 0.46);
+  --wash: rgba(13, 27, 62, 0.55);
+  --halo: rgba(60, 150, 255, 0.28);
+}
+
+/* -- timestamps & marks ------------------------------------------ */
+.bub-at {
+  flex: none;
+  font-size: clamp(8.5px, 0.6vw, 11.5px);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #8098bd;
+  white-space: nowrap;
+}
+
+.bub-at.inside {
+  margin-left: 4px;
+}
+
+.bub-at.under {
+  color: #7c92b8;
+}
+
+.bub-at.outside {
+  color: #7f95ba;
+}
+
+.bub-lead {
+  flex: none;
+  color: var(--green-hot);
+  filter: drop-shadow(0 0 6px rgba(64, 226, 170, 0.8));
+}
+
+.bub-done {
+  flex: none;
+  margin-left: 2px;
+  color: var(--green-hot);
+  filter: drop-shadow(0 0 7px rgba(80, 240, 150, 0.85));
+  animation: check-in 0.6s var(--ease-out) both;
+}
+
+@keyframes check-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+/* -- scroll pips ------------------------------------------------- */
+.conv-pips {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 2px;
+  flex: none;
+}
+
+.conv-pips i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 7px var(--cyan);
+  animation: conv-pip 1.9s var(--ease-hud) infinite;
+}
+
+.conv-pips i:nth-child(2) {
+  background: var(--blue);
+  box-shadow: 0 0 7px var(--blue);
+  animation-delay: 0.18s;
+}
+.conv-pips i:nth-child(3) {
+  background: var(--violet);
+  box-shadow: 0 0 7px var(--violet);
+  animation-delay: 0.36s;
+}
+.conv-pips i:nth-child(4) {
+  background: #3c5a86;
+  box-shadow: none;
+  animation-delay: 0.54s;
+}
+
+@keyframes conv-pip {
+  0%,
+  70%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
+/* -- composer ---------------------------------------------------- */
+.conv-input {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: clamp(6px, 0.7vh, 11px) clamp(8px, 0.7vw, 14px);
+  border-radius: 11px;
+  background:
+    linear-gradient(180deg, rgba(70, 190, 255, 0.08), transparent 70%),
+    rgba(8, 16, 40, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(74, 196, 255, 0.45),
+    0 0 20px -6px rgba(53, 200, 255, 0.45),
+    inset 0 0 24px -12px rgba(90, 220, 255, 0.75),
+    0 6px 18px -4px rgba(0, 0, 0, 0.35);
+  transition: box-shadow 0.4s var(--ease-hud), transform 0.4s var(--ease-out);
+}
+
+.conv-input:focus-within {
+  box-shadow:
+    0 0 0 1px rgba(110, 224, 255, 0.78),
+    0 0 30px -4px rgba(53, 210, 255, 0.6),
+    inset 0 0 28px -10px rgba(120, 230, 255, 0.9),
+    0 8px 24px -4px rgba(0, 0, 0, 0.4);
+  transform: translateZ(4px);
+}
+
+.conv-input input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: clamp(12px, 0.88vw, 16px);
+  font-weight: 500;
+  color: #eaf4ff;
+  padding: 2px 2px 2px 4px;
+}
+
+.conv-input input::placeholder {
+  color: #6f85aa;
+}
+
+.conv-send {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: var(--cyan);
+  filter: drop-shadow(0 0 7px rgba(53, 230, 255, 0.7));
+  transition:
+    transform 0.28s var(--ease-out),
+    background 0.28s var(--ease-hud);
+}
+
+.conv-send:hover {
+  transform: translateX(2px) scale(1.08);
+  background: rgba(53, 230, 255, 0.12);
+}
+
+.conv-send:active {
+  transform: scale(0.94);
+}

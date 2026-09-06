@@ -1,0 +1,388 @@
+/* ============================================================
+   Bottom control deck — MIC / INTERRUPT / STOP
+   Sits below the stage so it never covers the energy core.
+   ============================================================ */
+
+.ctl-deck {
+  --accent: var(--cyan);
+  position: relative;
+  flex: none;
+  width: min(100%, 730px);
+  margin: 0 auto;
+  padding: clamp(13px, 1.2vh, 20px) clamp(22px, 2vw, 42px) clamp(9px, 0.9vh, 15px);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(29, 93, 170, 0.16), transparent 21% 79%, rgba(119, 46, 178, 0.15)),
+    linear-gradient(180deg, rgba(70, 200, 255, 0.18), rgba(10, 20, 55, 0.05) 58%),
+    rgba(5, 9, 29, 0.33); /* More transparent: galaxy glows through the shelf */
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  box-shadow:
+    0 0 0 1px rgba(64, 206, 255, 0.62),
+    0 0 38px -7px rgba(53, 200, 255, 0.7),
+    inset 0 0 48px -10px rgba(90, 220, 255, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    /* console depth shadow */
+    0 18px 50px -8px rgba(0, 0, 0, 0.55),
+    0 8px 20px rgba(0, 0, 0, 0.3);
+  clip-path: polygon(4% 0, 96% 0, 100% 17%, 100% 84%, 96% 100%, 4% 100%, 0 84%, 0 17%);
+}
+
+/* hairline highlight along the top edge */
+.ctl-deck::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(120, 226, 255, 0.7),
+    transparent
+  );
+  filter: blur(0.3px);
+  pointer-events: none;
+}
+
+.ctl-deck::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 18px;
+  left: 33.33%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(73, 149, 255, 0.52), transparent);
+  box-shadow:
+    calc(min(100%, 730px) / 3) 0 0 rgba(73, 149, 255, 0.34),
+    0 0 14px rgba(73, 149, 255, 0.42);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.ctl-rails {
+  position: absolute;
+  top: 9px;
+  left: 26px;
+  right: 26px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.ctl-rails .tick-rail {
+  --accent: var(--cyan);
+  opacity: 0.4;
+}
+
+.ctl-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(28px, 4.4vw, 86px);
+}
+
+/* -- one button -------------------------------------------------- */
+.ctl {
+  --d: clamp(82px, 6.7vw, 118px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(5px, 0.62vh, 10px);
+  padding: 5px 2px 1px;
+  color: var(--accent);
+  transition: transform 0.34s var(--ease-out);
+}
+
+.ctl:hover {
+  transform: translateY(-2px);
+}
+
+.ctl:focus-visible {
+  outline: none;
+}
+
+.ctl:focus-visible .ctl-ring {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 100%, white 20%),
+    0 0 30px -2px color-mix(in srgb, var(--accent) 70%, transparent),
+    inset 0 0 28px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* dashed halo orbiting each button */
+.ctl-orbit {
+  --o: calc(var(--d) + 15px);
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: var(--o);
+  height: var(--o);
+  margin-left: calc(var(--o) / -2);
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.45;
+  pointer-events: none;
+  animation: ctl-orbit 17s linear infinite;
+  transition:
+    opacity 0.4s var(--ease-hud),
+    border-color 0.4s var(--ease-hud);
+}
+
+@keyframes ctl-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ctl:hover .ctl-orbit {
+  opacity: 0.85;
+  animation-duration: 7s;
+}
+
+/* -- the glass ring holding the glyph ---------------------------- */
+.ctl-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--d);
+  height: var(--d);
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 50% 32%,
+      color-mix(in srgb, var(--accent) 16%, transparent),
+      transparent 68%
+    ),
+    rgba(5, 10, 30, 0.55);
+  /* The deck behind these rings is already frosted — see the note on .bub. */
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 72%, transparent),
+    0 0 25px -4px color-mix(in srgb, var(--accent) 72%, transparent),
+    0 0 54px -14px color-mix(in srgb, var(--accent) 76%, transparent),
+    inset 0 0 31px -6px color-mix(in srgb, var(--accent) 68%, transparent);
+  transition:
+    box-shadow 0.36s var(--ease-hud),
+    transform 0.36s var(--ease-out);
+}
+
+.ctl:hover .ctl-ring {
+  transform: scale(1.055);
+  box-shadow:
+    0 0 0 1.8px color-mix(in srgb, var(--accent) 92%, transparent),
+    0 0 34px -3px color-mix(in srgb, var(--accent) 68%, transparent),
+    inset 0 0 30px -5px color-mix(in srgb, var(--accent) 75%, transparent);
+}
+
+.ctl:active .ctl-ring {
+  transform: scale(0.93);
+  transition-duration: 0.09s;
+}
+
+.ctl-ring svg {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 65%, transparent));
+}
+
+/* soft energy breathing inside the ring */
+.ctl-fill {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 32%, transparent) 0%,
+    transparent 72%
+  );
+  opacity: 0.32;
+  pointer-events: none;
+  animation: ctl-breathe 3.6s var(--ease-hud) infinite alternate;
+}
+
+@keyframes ctl-breathe {
+  from {
+    opacity: 0.2;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+}
+
+.ctl:hover .ctl-fill {
+  opacity: 0.72;
+}
+
+.ctl-label {
+  font-family: var(--font-hud);
+  font-size: clamp(11px, 0.85vw, 16px);
+  font-weight: 700;
+  letter-spacing: 0.19em;
+  color: color-mix(in srgb, var(--accent) 55%, #ffffff);
+  text-shadow: 0 0 11px color-mix(in srgb, var(--accent) 55%, transparent);
+  white-space: nowrap;
+}
+
+/* -- MIC armed --------------------------------------------------- */
+.ctl.is-on .ctl-ring {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 100%, white 12%),
+    0 0 36px -2px color-mix(in srgb, var(--accent) 78%, transparent),
+    inset 0 0 32px -4px color-mix(in srgb, var(--accent) 85%, transparent);
+  animation: ctl-on-glow 2s var(--ease-hud) infinite alternate;
+}
+
+@keyframes ctl-on-glow {
+  from {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent) 100%, white 12%),
+      0 0 36px -2px color-mix(in srgb, var(--accent) 78%, transparent),
+      inset 0 0 32px -4px color-mix(in srgb, var(--accent) 85%, transparent);
+  }
+  to {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--accent) 100%, white 20%),
+      0 0 50px -2px color-mix(in srgb, var(--accent) 100%, transparent),
+      inset 0 0 40px -2px color-mix(in srgb, var(--accent) 100%, transparent);
+  }
+}
+
+.ctl.is-on .ctl-fill {
+  opacity: 0.85;
+  animation-duration: 1.05s;
+}
+
+.ctl.is-on .ctl-orbit {
+  border-style: solid;
+  opacity: 0.8;
+  animation-duration: 6s;
+}
+
+.ctl.is-on .ctl-ring::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  animation: ctl-ping 1.9s var(--ease-out) infinite;
+}
+
+/* status dot indicator */
+.ctl-status-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff3b5c;
+  box-shadow: 0 0 6px rgba(255, 59, 92, 0.8);
+  transition:
+    background 0.4s var(--ease-hud),
+    box-shadow 0.4s var(--ease-hud);
+  z-index: 2;
+}
+
+.ctl-status-dot.active {
+  background: var(--green-hot);
+  box-shadow: 0 0 8px rgba(64, 226, 170, 0.9), 0 0 16px rgba(64, 226, 170, 0.4);
+  animation: dot-pulse 1.4s var(--ease-hud) infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(64, 226, 170, 0.9), 0 0 16px rgba(64, 226, 170, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(64, 226, 170, 1), 0 0 24px rgba(64, 226, 170, 0.6);
+  }
+}
+
+/* state label below button name */
+.ctl-state-label {
+  font-family: var(--font-hud);
+  font-size: clamp(7px, 0.55vw, 10px);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  opacity: 0.55;
+  transition: color 0.4s var(--ease-hud), opacity 0.4s var(--ease-hud), text-shadow 0.4s var(--ease-hud);
+}
+
+.ctl-mic.is-on .ctl-state-label {
+  color: var(--green-hot);
+  opacity: 0.9;
+  text-shadow: 0 0 10px rgba(64, 226, 170, 0.7);
+}
+
+.ctl-mic.is-off .ctl-state-label {
+  color: #ff3b5c;
+  opacity: 0.7;
+  text-shadow: 0 0 8px rgba(255, 59, 92, 0.5);
+}
+
+/* -- MIC off muted state ----------------------------------------- */
+.ctl-mic.is-off .ctl-ring {
+  opacity: 0.45;
+  filter: saturate(0.3);
+}
+
+.ctl-mic.is-off .ctl-fill {
+  opacity: 0.1;
+  animation: none;
+}
+
+.ctl-mic.is-off .ctl-orbit {
+  opacity: 0.2;
+  border-style: dashed;
+  animation-duration: 25s;
+}
+
+.ctl-mic.is-off .ctl-label {
+  opacity: 0.4;
+}
+
+@keyframes ctl-ping {
+  0% {
+    opacity: 0.75;
+    transform: scale(0.9);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.42);
+  }
+}
+
+/* -- footer decoration ------------------------------------------- */
+.ctl-foot {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(5px, 0.6vh, 10px);
+}
+
+.ctl-foot i {
+  width: 44%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(90, 212, 255, 0.62),
+    transparent
+  );
+  box-shadow: 0 0 9px rgba(53, 200, 255, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctl-orbit,
+  .ctl-fill,
+  .ctl.is-on .ctl-ring::after,
+  .ctl.is-on .ctl-ring,
+  .ctl-status-dot.active {
+    animation: none;
+  }
+}

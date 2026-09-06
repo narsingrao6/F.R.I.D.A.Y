@@ -1,0 +1,154 @@
+/* ============================================================
+   HUD primitives — glass panels, gradient hairlines, corner
+   brackets, technical decorations. Recolour with --accent.
+   ============================================================ */
+
+.hud {
+  --accent: var(--cyan);
+  --accent-2: var(--blue);
+  --glow: 0.55;
+  position: relative;
+  border-radius: var(--r-panel);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0) 42%
+    ),
+    radial-gradient(
+      130% 100% at 50% 0%,
+      color-mix(in srgb, var(--accent) 8%, transparent) 0%,
+      transparent 68%
+    ),
+    color-mix(in srgb, var(--glass) 34%, transparent); /* See-through: keep the blur, let the galaxy show */
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  box-shadow:
+    0 0 0 var(--hair) color-mix(in srgb, var(--accent) 38%, transparent),
+    0 0 20px color-mix(in srgb, var(--accent) calc(var(--glow) * 30%), transparent),
+    0 0 50px -6px color-mix(in srgb, var(--accent) calc(var(--glow) * 24%), transparent),
+    inset 0 0 30px -8px color-mix(in srgb, var(--accent) 34%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    /* depth lift shadow */
+    0 10px 30px -6px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+  /* Removed transform-style: preserve-3d because it breaks backdrop-filter in WebKit/Blink */
+  transition:
+    box-shadow 0.5s var(--ease-hud),
+    transform 0.5s var(--ease-out);
+}
+
+/* 3D hover tilt — panels respond to interaction */
+.hud:hover {
+  box-shadow:
+    0 0 0 var(--hair) color-mix(in srgb, var(--accent) 50%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) calc(var(--glow) * 40%), transparent),
+    0 0 60px -6px color-mix(in srgb, var(--accent) calc(var(--glow) * 30%), transparent),
+    inset 0 0 32px -8px color-mix(in srgb, var(--accent) 40%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 14px 40px -6px rgba(0, 0, 0, 0.5),
+    0 6px 18px rgba(0, 0, 0, 0.3);
+  transform: translateZ(4px) scale(1.008);
+}
+
+/* Gradient hairline ring sitting exactly on the panel edge. */
+.hud::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--hair);
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--accent) 88%, transparent) 0%,
+    color-mix(in srgb, var(--accent-2) 52%, transparent) 34%,
+    rgba(120, 150, 220, 0.14) 58%,
+    color-mix(in srgb, var(--accent) 62%, transparent) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Slow light travelling along the top hairline. */
+.hud::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  width: 34%;
+  height: var(--hair);
+  border-radius: 99px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 95%, white 18%),
+    transparent
+  );
+  filter: blur(0.4px);
+  opacity: 0;
+  pointer-events: none;
+  animation: hud-sweep 9s var(--ease-hud) infinite;
+}
+
+@keyframes hud-sweep {
+  0%,
+  62% {
+    opacity: 0;
+    transform: translateX(-30%);
+  }
+  70% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(200%);
+  }
+}
+
+/* -- corner brackets -------------------------------------------- */
+.hud-corner {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border: 1.4px solid color-mix(in srgb, var(--accent) 82%, transparent);
+  pointer-events: none;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+
+.hud-corner.tl {
+  top: 6px;
+  left: 6px;
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 5px;
+}
+.hud-corner.tr {
+  top: 6px;
+  right: 6px;
+  border-left: 0;
+  border-bottom: 0;
+  border-top-right-radius: 5px;
+}
+.hud-corner.bl {
+  bottom: 6px;
+  left: 6px;
+  border-right: 0;
+  border-top: 0;
+  border-bottom-left-radius: 5px;
+}
+.hud-corner.br {
+  bottom: 6px;
+  right: 6px;
+  border-left: 0;
+  border-top: 0;
+  border-bottom-right-radius: 5px;
+}

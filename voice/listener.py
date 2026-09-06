@@ -48,6 +48,7 @@ MODEL = "whisper-large-v3"
 VOCAB_PROMPT = (
     "naku, naaku, nenu, kavali, kaavali, enti, emiti, ivala, repu, "
     "vellali, vellala, cheppu, undi, ledu, ippudu, samayam, entha, "
+    "chey, cheyyi, cheyyali, chestunna, chala, bagundi, avunu, kadu, "
     "mujhe, chahiye, batao, kya, kaisa, kaisi, hai, aaj, kal, abhi, "
     "samay, madad, jaldi, subah, weather, college, help, reminder, "
     "alarm, time, friday"

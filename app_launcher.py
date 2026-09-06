@@ -652,6 +652,33 @@ _WEBSITES = {
     "stack overflow": "https://stackoverflow.com",
 }
 
+# Devanagari / Telugu script app names → Latin canonical form.
+# Whisper sometimes writes app names in native script.
+_NATIVE_APP_NAMES = {
+    # Hindi (Devanagari)
+    "यूट्यूब": "youtube", "यू ट्यूब": "youtube", "यूट्यूब": "youtube",
+    "गूगल": "google", "जीमेल": "gmail", "क्रोम": "chrome",
+    "फ़ायरफ़ॉक्स": "firefox", "फायरफॉक्स": "firefox",
+    "एज": "edge", "नोटपैड": "notepad", "कैलकुलेटर": "calculator",
+    "व्हाट्सएप": "whatsapp", "वॉट्सऐप": "whatsapp",
+    "टेलीग्राम": "telegram", "इंस्टाग्राम": "instagram",
+    "फेसबुक": "facebook", "ट्विटर": "twitter",
+    "नेटफ्लिक्स": "netflix", "अमेज़न": "amazon", "अमेज़ॉन": "amazon",
+    "स्पॉटिफ़ाई": "spotify", "स्पॉटिफाई": "spotify",
+    "रेडिट": "reddit", "लिंक्डइन": "linkedin",
+    "पेंट": "paint", "वर्ड": "word", "एक्सेल": "excel",
+    "पावरपॉइंट": "powerpoint", "फ़ाइल मैनेजर": "file explorer",
+    "सेटिंग्स": "settings", "सेटिंग": "settings",
+    "कैमरा": "camera", "फ़ोटो": "photos", "फोटो": "photos",
+    # Telugu script
+    "యూట్యూబ్": "youtube", "గూగుల్": "google", "క్రోమ్": "chrome",
+    "ఫైర్‌ఫాక్స్": "firefox", "ఎడ్జ్": "edge",
+    "నోట్‌ప్యాడ్": "notepad", "క్యాలిక్యులేటర్": "calculator",
+    "వాట్సాప్": "whatsapp", "ఇన్‌స్టాగ్రామ్": "instagram",
+    "ఫేస్‌బుక్": "facebook", "నెట్‌ఫ్లిక్స్": "netflix",
+    "సెట్టింగ్స్": "settings", "సెట్టింగ్": "settings",
+}
+
 def open_app(name: str) -> tuple[bool, str]:
     """
     Open an application or website by name.
@@ -662,6 +689,12 @@ def open_app(name: str) -> tuple[bool, str]:
     _index_ready.wait(timeout=0.25)
 
     q = _normalize(name)
+    
+    # If _normalize stripped everything (Devanagari/Telugu script input),
+    # try resolving via common Devanagari/Telugu app name mappings.
+    if not q:
+        q = _NATIVE_APP_NAMES.get(name.strip(), "")
+    
     canonical = _SPOKEN_VARIANTS.get(q, q)
 
     # Websites.
@@ -724,6 +757,11 @@ def close_app(name: str) -> tuple[bool, str]:
 
     Returns (success: bool, display_name_or_error: str).
     """
+    # Resolve Devanagari/Telugu script names to Latin
+    resolved = _NATIVE_APP_NAMES.get(name.strip())
+    if resolved:
+        name = resolved
+    
     proc, display = _get_process_name(name, min_score=0.70)
     
     if proc.lower() in _PROTECTED_PROCESSES:
@@ -743,17 +781,55 @@ def close_app(name: str) -> tuple[bool, str]:
 
         # Process not found — might be a UWP app or named differently.
         # Try via window title as a fallback.
-        result2 = subprocess.run(
-            ["taskkill", "/F", "/FI", f"WINDOWTITLE eq {display}*"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
+        
+        # If it's a known website, we must match anywhere in the title 
+        # (e.g. "(2) YouTube - Edge"). taskkill /FI doesn't support *Title*.
+        q_norm = _normalize(name)
+        if q_norm in _WEBSITES or _SPOKEN_VARIANTS.get(q_norm, q_norm) in _WEBSITES:
+            import csv
+            from io import StringIO
+            # Only scan browser processes — not all ~200 processes.
+            _BROWSERS = ("msedge.exe", "chrome.exe", "firefox.exe",
+                         "brave.exe", "opera.exe", "vivaldi.exe",
+                         "iexplore.exe", "chromium.exe")
+            pids = []
+            for browser in _BROWSERS:
+                tl = subprocess.run(
+                    ["tasklist", "/V", "/FO", "CSV", "/FI", f"IMAGENAME eq {browser}"],
+                    capture_output=True, text=True, timeout=3,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+                if "No tasks" in tl.stdout or not tl.stdout.strip():
+                    continue
+                try:
+                    reader = csv.reader(StringIO(tl.stdout))
+                    next(reader, None)  # skip header
+                    for row in reader:
+                        if len(row) > 8:
+                            window_title = row[8]
+                            if display.lower() in window_title.lower() and "N/A" not in window_title:
+                                pids.append(row[1])
+                except Exception:
+                    pass
+                if pids:
+                    break  # found matches, no need to check other browsers
+                
+            if pids:
+                for pid in pids:
+                    subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                return True, display
+        else:
+            result2 = subprocess.run(
+                ["taskkill", "/F", "/FI", f"WINDOWTITLE eq {display}*"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                creationflags=subprocess.CREATE_NO_WINDOW,
+            )
 
-        # taskkill /FI returns 0 even if it finds no tasks, so we must check stdout.
-        if result2.returncode == 0 and "No tasks running" not in result2.stdout and "not found" not in result2.stderr.lower():
-            return True, display
+            # taskkill /FI returns 0 even if it finds no tasks, so we must check stdout.
+            if result2.returncode == 0 and "No tasks running" not in result2.stdout and "not found" not in result2.stderr.lower():
+                return True, display
 
         return False, display
 
@@ -772,14 +848,16 @@ _OPEN_PATTERNS = [
     # Telugu (romanized)
     r"(.+)\s+(?:thiyu|tiyyandi|therivu)",
     r"(?:thiyu|tiyyandi|therivu)\s+(.+)",
-    # Hindi (romanized)
-    r"(.+)\s+(?:khol|kholo|kholiye|chalao|chalu\s+karo)",
-    r"(?:khol|kholo|kholiye|chalao|chalu\s+karo)\s+(.+)",
+    # Hindi (romanized) — expanded to cover "khol do", "chala do", etc.
+    r"(.+)\s+(?:khol|kholo|kholiye|khol\s+do|khol\s+de|kholna|khol\s+dijiye)",
+    r"(.+)\s+(?:chalao|chala\s+do|chala\s+de|chalu\s+karo|chalu\s+kar\s+do)",
+    r"(?:khol|kholo|kholiye|khol\s+do|khol\s+de|kholna|khol\s+dijiye)\s+(.+)",
+    r"(?:chalao|chala\s+do|chala\s+de|chalu\s+karo|chalu\s+kar\s+do)\s+(.+)",
     # Native script triggers
     r"(.+)\s+(?:ఓపెన్|తెరువు|తియ్యి|స్టార్ట్)\s*(?:చెయ్యి|చేయి|చేయ్)?",
     r"(?:ఓపెన్|తెరువు|తియ్యి|స్టార్ట్)\s*(?:చెయ్యి|చేయి|చేయ్)?\s+(.+)",
-    r"(.+)\s+(?:खोल|खोलो|खोलिए|चलाओ|शुरू\s+करो)",
-    r"(?:खोल|खोलो|खोलिए|चलाओ|शुरू\s+करो)\s+(.+)",
+    r"(.+)\s+(?:खोल|खोलो|खोलिए|खोल\s+दो|खोल\s+दे|चलाओ|चला\s+दो|शुरू\s+करो)",
+    r"(?:खोल|खोलो|खोलिए|खोल\s+दो|खोल\s+दे|चलाओ|चला\s+दो|शुरू\s+करो)\s+(.+)",
     # English — simple pattern last.
     r"(?:open|launch|start|run)\s+(.+)",
 ]
@@ -791,14 +869,16 @@ _CLOSE_PATTERNS = [
     # Telugu (romanized)
     r"(.+)\s+(?:aapeyyi|apu|aapeyi)",
     r"(?:aapeyyi|apu|aapeyi)\s+(.+)",
-    # Hindi (romanized)
-    r"(.+)\s+(?:band\s+kar|band\s+karo|band\s+kijiye|bund\s+karo|hatao)",
-    r"(?:band\s+kar|band\s+karo|band\s+kijiye|bund\s+karo|hatao)\s+(.+)",
+    # Hindi (romanized) — expanded
+    r"(.+)\s+(?:band\s+kar|band\s+karo|band\s+kijiye|band\s+kar\s+do|band\s+kardo|bund\s+karo)",
+    r"(.+)\s+(?:hatao|hata\s+do|hata\s+de|band\s+kar\s+de)",
+    r"(?:band\s+kar|band\s+karo|band\s+kijiye|band\s+kar\s+do|band\s+kardo|bund\s+karo)\s+(.+)",
+    r"(?:hatao|hata\s+do|hata\s+de|band\s+kar\s+de)\s+(.+)",
     # Native script triggers
     r"(.+)\s+(?:క్లోజ్|బంద్|ఆపు|ఆపేయి)\s*(?:చెయ్యి|చేయి|చేయ్)?",
     r"(?:క్లోజ్|బంద్|ఆపు|ఆపేయి)\s*(?:చెయ్యి|చేయి|చేయ్)?\s+(.+)",
-    r"(.+)\s+(?:बंद\s+करो|बंद\s+कीजिए|हटाओ)",
-    r"(?:बंद\s+करो|बंद\s+कीजिए|हटाओ)\s+(.+)",
+    r"(.+)\s+(?:बंद\s+करो|बंद\s+कर\s+दो|बंद\s+करदो|बंद\s+कीजिए|हटाओ|हटा\s+दो)",
+    r"(?:बंद\s+करो|बंद\s+कर\s+दो|बंद\s+करदो|बंद\s+कीजिए|हटाओ|हटा\s+दो)\s+(.+)",
     # English — simple pattern last.
     r"(?:close|quit|exit|kill|end|terminate)\s+(.+)",
     r"(.+)\s+(?:close|quit|band)\b",
@@ -819,7 +899,7 @@ def _strip_filler(name: str) -> str:
         # Telugu particles
         "ni", "lo", "ra", "le", "na", "ki", "ko",
         # Hindi particles
-        "ko", "ka", "ki", "ke", "se", "hai", "ho",
+        "ko", "ka", "ki", "ke", "se", "hai", "ho", "do", "de",
     }
 
     words = name.strip().split()

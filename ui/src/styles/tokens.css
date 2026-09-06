@@ -1,0 +1,54 @@
+/* ============================================================
+   Design tokens — every colour, glow and rhythm in one place.
+   ============================================================ */
+
+:root {
+  /* -- surfaces ------------------------------------------------ */
+  --void: #02030a;
+  --void-2: #05071a;
+  --navy: #070b22;
+  --navy-2: #0a1030;
+
+  --glass: rgba(9, 14, 38, 0.52);
+  --glass-strong: rgba(7, 11, 32, 0.74);
+  --glass-top: rgba(28, 44, 96, 0.24);
+
+  /* -- energy colours ------------------------------------------ */
+  --cyan: #35e6ff;
+  --cyan-hot: #a8f4ff;
+  --cyan-deep: #0891b2;
+  --blue: #3b7dff;
+  --blue-deep: #1b3ec9;
+  --violet: #8b5cf6;
+  --purple: #a855f7;
+  --magenta: #ec4899;
+  --pink-hot: #ff7ad9;
+  --green: #34d95f;
+  --green-hot: #7dffa4;
+  --amber: #fbaf24;
+  --amber-hot: #ffd76a;
+  --orange: #fb8b3c;
+  --red: #ff3b52;
+  --red-hot: #ff8a99;
+
+  /* -- text ---------------------------------------------------- */
+  --ink: #eaf4ff;
+  --ink-dim: #9fb4d6;
+  --ink-faint: #6b7fa3;
+
+  /* -- type ---------------------------------------------------- */
+  --font-hud: 'Orbitron', 'Segoe UI', sans-serif;
+  --font-body: 'Rajdhani', 'Segoe UI', sans-serif;
+  --font-indic: 'Noto Sans Telugu', 'Noto Sans Devanagari', 'Nirmala UI',
+    'Rajdhani', sans-serif;
+
+  /* -- geometry ------------------------------------------------ */
+  --r-panel: 16px;
+  --r-soft: 10px;
+  --hair: 1px;
+  --gap: clamp(8px, 0.72vw, 14px);
+
+  /* -- motion -------------------------------------------------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-hud: cubic-bezier(0.4, 0, 0.2, 1);
+}
