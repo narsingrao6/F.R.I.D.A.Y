@@ -1,107 +1,61 @@
-"""
-Barge-in support: lets the Boss stop F.R.I.D.A.Y. mid-sentence.
-
-Three things had to be right before this worked reliably, and each one
-was a real defect rather than a preference:
-
-  * The microphone is borrowed from the shared `mic_hub`, so the monitor
-    and the main listener never open the device at the same time.
-  * The monitor must never calibrate itself. It only ever opens the
-    microphone while she is already talking, so measuring the "ambient"
-    noise floor measured *her voice* and raised the threshold until the
-    Boss could not be heard at all. It borrows the main listener's floor
-    instead, which was measured while the room was quiet.
-  * Her own voice is in the microphone the whole time she speaks, so the
-    phrase the recogniser returns is usually her words with the Boss's
-    command buried inside. A wake or stop word therefore counts wherever
-    it lands, and a phrase built only of wake and stop words is never
-    dismissed as an echo - that is what used to swallow the most natural
-    interruption of all, saying "Friday, Friday" until she stops.
-"""
-
 import re
-import threading
-import time
-
 import speech_recognition as sr
+import threading
+from collections import Counter
 
-from voice.audio import mic_hub, is_shutting_down, MicrophoneBusy
-from voice.speaker import stop_speaking, is_speaking, current_speech
+from voice.speaker import stop_speaking
 
-# Recogniser spellings of "Friday" that show up in practice.
-WAKE_WORDS = {
-    "friday",
-    "fryday",
-    "freeday",
-    "fridays",
-}
+# ---------------------------------------------------------------- defaults
 
-# Optional second word, in any of the supported languages. The spellings
-# with no dictionary entry are what the recogniser actually returns for
-# those sounds, so they have to be listed too.
-STOP_WORDS = {
-    "stop", "quiet", "enough", "cancel", "wait", "shh",
-    "aagu", "aagandi", "apu", "aapu", "chaalu", "chalu", "vadhu",
-    "ruko", "ruk", "rukiye", "band", "bas", "chup",
-    "agu", "augu", "aagipo", "agipo", "aapandi", "vaddu",
-    "roko", "rooko", "rukho", "bandh", "chupp",
-}
-
-# Said on their own - with no "Friday" in front - these can only be aimed
-# at her. The rest of STOP_WORDS needs the name, because words like
-# "bas", "band", "wait" and "chaalu" turn up inside her own replies
-# ("alarm set कर दिया", "wait a moment, Boss") and she must never talk
-# herself into silence.
-SOLO_STOP_WORDS = {
-    "stop", "quiet", "enough", "cancel", "shh",
-    "aagu", "aagandi", "aapu", "apu", "aagipo", "agipo", "aapandi",
-    "ruko", "rukiye", "rooko", "rukho", "roko",
-}
-
-_WORD = re.compile(r"[a-z]+")
-
-MAX_COMMAND_WORDS = 4
-MAX_SOLO_STOP_WORDS = 2
-ECHO_OVERLAP = 0.6
-MIN_ECHO_WORDS = 3
-
-# Floor for the borrowed threshold, in case the room was silent when the
-# listener calibrated and the number came back unusably low.
-BASE_THRESHOLD = 400
-
-# Short phrases: she has to react while she is still talking, and the
-# microphone has to be handed back quickly once she stops.
-LISTEN_TIMEOUT = 0.4
-PHRASE_LIMIT = 2.0
+# The monitor must never be *more* sensitive than this, so a quiet room
+# cannot push the bar down until her own voice trips the trigger.
+BASE_THRESHOLD = 600
 
 
 class InterruptionController:
 
+    THRESHOLD = BASE_THRESHOLD
+
+    # Words that are unmistakable orders on their own.
+    STOP_WORDS = {
+        "stop",
+        "stop it",
+        "quiet",
+        "enough",
+        "cancel",
+
+        # Telugu
+        "aagu",
+        "aagipo",
+        "aapandi",
+
+        # Hindi
+        "ruko",
+        "rukiye",
+        "roko",
+    }
+
+    # Words she often says herself. They only silence her when the Boss
+    # also uses her name, or she would talk herself off the air.
+    NAME_NEEDED_STOP = {
+        "bas",
+        "band",
+        "wait",
+        "chup",
+        "chaalu",
+        "vaddu",
+    }
+
     def __init__(self):
         self.recognizer = sr.Recognizer()
-
-        self.recognizer.energy_threshold = BASE_THRESHOLD
-
-        # Never adaptive here: her own playback would push the threshold
-        # up and up until nothing the Boss said could clear it.
-        self.recognizer.dynamic_energy_threshold = False
-
-        self.recognizer.pause_threshold = 0.4
-        self.recognizer.non_speaking_duration = 0.2
 
         self.running = False
         self.interrupted = False
         self.thread = None
 
-    # ------------------------------------------------------- lifecycle
-
-    def tune(self, threshold):
-        """Borrow a noise floor measured while the room was quiet."""
-        if threshold:
-            self.recognizer.energy_threshold = max(
-                BASE_THRESHOLD,
-                float(threshold),
-            )
+        self.recognizer.dynamic_energy_threshold = False
+        self.recognizer.energy_threshold = BASE_THRESHOLD
+        self.recognizer.pause_threshold = 0.5
 
     def start(self):
         if self.running:
@@ -112,7 +66,7 @@ class InterruptionController:
 
         self.thread = threading.Thread(
             target=self._monitor,
-            daemon=True,
+            daemon=True
         )
 
         self.thread.start()
@@ -120,203 +74,172 @@ class InterruptionController:
     def stop(self):
         self.running = False
 
-        thread = self.thread
-        self.thread = None
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=0.5)
 
-        if thread and thread.is_alive():
-            # The shared microphone lock guarantees safety even if the
-            # thread needs another moment to finish its current phrase,
-            # so there is no need to block the conversation here.
-            thread.join(timeout=1.0)
+        self.thread = None
 
     def reset(self):
         self.interrupted = False
 
-    def was_interrupted(self) -> bool:
+    def tune(self, energy_threshold):
+        # A quiet room measured below the floor must not lower it.
+        if energy_threshold is None:
+            return
+
+        if energy_threshold < BASE_THRESHOLD:
+            return
+
+        self.recognizer.energy_threshold = float(energy_threshold)
+
+    def was_interrupted(self):
         return self.interrupted
 
-    # -------------------------------------------------------- decisions
+    # ------------------------------------------------------- decision logic
 
     @staticmethod
-    def _is_echo(text: str) -> bool:
-        """True if this is most likely F.R.I.D.A.Y.'s own voice."""
-        spoken = current_speech().lower()
+    def _normalize(text):
+        text = str(text).lower().strip()
+
+        # Dots inside "F.R.I.D.A.Y." merge into the word; every other
+        # punctuation becomes a space. Letters/digits stay put.
+        text = text.replace(".", "")
+
+        text = re.sub(r"[^\w\s]", " ", text, flags=re.UNICODE)
+
+        return re.sub(r"\s+", " ", text).strip()
+
+    @classmethod
+    def _is_trigger(cls, text):
+        """
+        True when the Boss actually interrupted.
+
+        Her name alone inside an everyday sentence ("today is FRIDAY and
+        the weather...") is NOT an interruption. Repeating her name, or
+        pairing it with a stop word, is.
+        """
+        text = cls._normalize(text)
+
+        if not text:
+            return False
+
+        # A bare stop word is always an order.
+        if text in cls.STOP_WORDS:
+            return True
+
+        words = text.split()
+
+        if "friday" not in words:
+            return False
+
+        # Repeating her name is how the Boss snaps her out of it.
+        if sum(1 for word in words if word == "friday") >= 2:
+            return True
+
+        # A stop word plus her name, wherever they land in the phrase.
+        if any(word in cls.STOP_WORDS for word in words):
+            return True
+
+        # Weak stop words only count when her name is attached.
+        if any(word in cls.NAME_NEEDED_STOP for word in words):
+            return True
+
+        # Short name-only utterances ("hey friday") are interrupts, but a
+        # long sentence that merely mentions the weekday is not.
+        if all(word in {"friday", "hey"} for word in words):
+            return True
+
+        return False
+
+    @classmethod
+    def _is_echo(cls, text):
+        """
+        True when the heard words are F.R.I.D.A.Y.'s own current speech,
+        so her voice cannot interrupt herself.
+
+        The Boss's interruption always gets through: an echo must be a
+        subset of what she is currently saying, and nothing else.
+        """
+        from voice.speaker import current_speech
+
+        current = current_speech()
+
+        if not current:
+            return False
+
+        spoken = cls._normalize(current).split()
 
         if not spoken:
             return False
 
-        heard = _WORD.findall(text)
+        heard = cls._normalize(text).split()
 
         if not heard:
-            return True
-
-        named = any(word in WAKE_WORDS for word in heard)
-
-        # Without her name, a phrase she is literally saying right now is
-        # her own voice - even a bare "stop", which she can say herself
-        # ("ఆ alarm stop చేసాను") and must not be silenced by.
-        if not named and text in spoken:
-            return True
-
-        # A phrase built only out of her name and stop words is not
-        # something she ever says, so it must never be written off as an
-        # echo. Without this, "friday friday friday" was discarded the
-        # moment her own reply happened to contain the word "Friday".
-        if all(
-            word in WAKE_WORDS or word in STOP_WORDS
-            for word in heard
-        ):
             return False
 
-        if text in spoken:
-            return True
+        spoken_count = Counter(spoken)
+        heard_count = Counter(heard)
 
-        spoken_words = set(_WORD.findall(spoken))
-
-        # Her name is not evidence of an echo - the Boss says it too - so
-        # only the surrounding words are compared.
-        content = {word for word in heard if word not in WAKE_WORDS}
-
-        if len(content) >= MIN_ECHO_WORDS and spoken_words:
-            overlap = len(content & spoken_words) / len(content)
-
-            if overlap >= ECHO_OVERLAP:
-                return True
-
-        return False
-
-    @staticmethod
-    def _is_trigger(text: str) -> bool:
-        """
-        Does this phrase look like the Boss telling her to stop?
-
-        Her voice is in the microphone while she talks, so the recogniser
-        usually returns her words with his command somewhere inside. A
-        clean four-word command is the easy case; the rules below are the
-        ones that survive her voice being mixed into the same phrase.
-        """
-        words = _WORD.findall(text)
-
-        if not words:
-            return False
-
-        wake = [word for word in words if word in WAKE_WORDS]
-
-        if wake:
-            # "friday stop", "friday aagu", "hey friday ruko" - and the
-            # same command with her own sentence wrapped around it.
-            if any(word in STOP_WORDS for word in words):
-                return True
-
-            # Saying her name again is how people actually interrupt.
-            if len(wake) >= 2:
-                return True
-
-            # A plain "friday" or "hey friday" on its own.
-            return len(words) <= MAX_COMMAND_WORDS
-
-        # No name, but an unmistakable stop word said on its own. She is
-        # speaking, so there is nothing else it could be aimed at.
-        return len(words) <= MAX_SOLO_STOP_WORDS and any(
-            word in SOLO_STOP_WORDS for word in words
+        return all(
+            spoken_count[word] >= count
+            for word, count in heard_count.items()
         )
 
-    # ---------------------------------------------------------- monitor
+    # ------------------------------------------------------------ monitoring
 
     def _monitor(self):
-        failures = 0
+
+        from voice.audio import mic_hub
 
         try:
             with mic_hub.session(
                 recognizer=self.recognizer,
-                # Deliberately no calibration: she is already speaking,
-                # so the only thing there is to measure is her own voice.
-                calibrate=0.0,
-                timeout=5.0,
+                calibrate=0.5
             ) as source:
 
-                while self.running and not is_shutting_down():
+                while self.running:
 
                     try:
                         audio = self.recognizer.listen(
                             source,
-                            timeout=LISTEN_TIMEOUT,
-                            phrase_time_limit=PHRASE_LIMIT,
+                            timeout=0.5,
+                            phrase_time_limit=2
                         )
 
                     except sr.WaitTimeoutError:
                         continue
 
-                    if not self.running or is_shutting_down():
-                        break
-
-                    import voice.vad as vad
-                    import voice.speaker_verification as sv
-                    
-                    samples = vad.dsp.from_audiodata(audio)
-                    report = vad.inspect(samples)
-                    
-                    if not report.ok:
-                        continue
-                        
-                    is_auth, score = sv.verify_samples(samples, report)
-                    if not is_auth:
-                        print("F.R.I.D.A.Y.: Unauthorized interruption attempt.")
-                        continue
-
                     try:
-                        # en-IN, not en-US: the Indian English model is
-                        # far better at Indian accents and at Romanized
-                        # Telugu/Hindi stop words like "aagu" or "ruko".
                         text = self.recognizer.recognize_google(
-                            audio,
-                            language="en-IN",
+                            audio
                         ).lower().strip()
 
-                        failures = 0
-
-                    except sr.UnknownValueError:
-                        continue
-
-                    except sr.RequestError:
-                        failures += 1
-
-                        # Network trouble: back off instead of hammering.
-                        time.sleep(min(failures * 0.2, 1.0))
+                    except (
+                        sr.UnknownValueError,
+                        sr.RequestError
+                    ):
                         continue
 
                     if not text:
                         continue
 
-                    # Only meaningful while she is actually speaking.
-                    if not is_speaking():
-                        continue
+                    if self._is_trigger(text) and not self._is_echo(text):
+                        print(
+                            f"F.R.I.D.A.Y.: "
+                            f"Interruption detected: {text}"
+                        )
 
-                    if self._is_echo(text):
-                        continue
+                        self.interrupted = True
+                        self.running = False
 
-                    if not self._is_trigger(text):
-                        continue
+                        stop_speaking()
 
-                    print(
-                        f"F.R.I.D.A.Y.: Interruption detected: {text}"
-                    )
-
-                    self.interrupted = True
-                    stop_speaking()
-
-                    self.running = False
-                    break
-
-        except MicrophoneBusy as error:
-            print(f"F.R.I.D.A.Y.: Interruption monitor idle: {error}")
+                        break
 
         except Exception as error:
+
             print(
-                "F.R.I.D.A.Y.: Interruption monitor stopped: "
+                "F.R.I.D.A.Y.: "
+                "Interruption monitor stopped: "
                 f"{type(error).__name__}"
             )
-
-        finally:
-            self.running = False
-

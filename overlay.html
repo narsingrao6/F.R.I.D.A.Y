@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F.R.I.D.A.Y. Core</title>
+    <style>
+        :root {
+            --core-size: 60px;
+            --idle-color: rgba(0, 255, 255, 0.7);
+            --listening-color: rgba(138, 43, 226, 0.9);
+            --processing-color: rgba(147, 112, 219, 0.9);
+            --speaking-color: rgba(255, 0, 255, 0.8);
+            --error-color: rgba(255, 69, 0, 0.9);
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: transparent !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            user-select: none;
+        }
+
+        /* Container for the draggable orb */
+        #orb-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: var(--core-size);
+            height: var(--core-size);
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        /* The glowing core */
+        .orb {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fff 10%, var(--idle-color) 60%);
+            box-shadow: 0 0 20px var(--idle-color);
+            transition: all 0.5s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Rings for animations */
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+
+        /* State Animations */
+        
+        /* IDLE: Slow breathing */
+        .state-idle .orb {
+            animation: breathe 4s infinite ease-in-out;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px var(--idle-color); }
+            50% { transform: scale(1.05); box-shadow: 0 0 25px var(--idle-color); }
+        }
+
+        /* LISTENING: Expanding rings */
+        .state-listening .orb {
+            background: radial-gradient(circle, #fff 10%, var(--listening-color) 60%);
+            box-shadow: 0 0 30px var(--listening-color);
+        }
+        .state-listening .ring {
+            width: 100%; height: 100%;
+            border-color: var(--listening-color);
+            animation: ripple 1.5s infinite ease-out;
+        }
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        /* THINKING: Rotating dashed ring */
+        .state-thinking .orb {
+            background: radial-gradient(circle, #fff 10%, var(--processing-color) 60%);
+            box-shadow: 0 0 20px var(--processing-color);
+        }
+        .state-thinking .ring {
+            width: 120%; height: 120%;
+            border: 3px dashed var(--processing-color);
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* SPEAKING: Audio-reactive fast pulse */
+        .state-speaking .orb {
+            background: radial-gradient(circle, #fff 10%, var(--speaking-color) 60%);
+            box-shadow: 0 0 30px var(--speaking-color);
+            animation: speak-pulse 0.4s infinite alternate;
+        }
+        @keyframes speak-pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 20px var(--speaking-color); }
+            100% { transform: scale(1.15); box-shadow: 0 0 40px var(--speaking-color); }
+        }
+
+        /* ERROR: Red warning */
+        .state-error .orb {
+            background: radial-gradient(circle, #fff 10%, var(--error-color) 60%);
+            box-shadow: 0 0 20px var(--error-color);
+            animation: err-flash 1s infinite;
+        }
+        @keyframes err-flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Hover effect */
+        #orb-container:hover .orb {
+            filter: brightness(1.2);
+        }
+
+        /* CONVERSATION PANEL */
+        #panel {
+            display: none;
+            position: absolute;
+            top: 90px;
+            left: 10px;
+            width: 320px;
+            height: 340px;
+            background: rgba(10, 15, 30, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 50;
+        }
+
+        #panel-header {
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #panel-header .status-text {
+            color: cyan;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        #chat-history {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Scrollbar styles */
+        #chat-history::-webkit-scrollbar { width: 5px; }
+        #chat-history::-webkit-scrollbar-track { background: transparent; }
+        #chat-history::-webkit-scrollbar-thumb { background: rgba(0,255,255,0.3); border-radius: 5px; }
+
+        .msg {
+            max-width: 85%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ddd;
+            border-bottom-right-radius: 2px;
+        }
+
+        .msg.friday {
+            align-self: flex-start;
+            background: rgba(0, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-bottom-left-radius: 2px;
+        }
+
+        #panel-footer {
+            padding: 10px;
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        #cmd-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            font-size: 13px;
+        }
+        
+        #cmd-input::placeholder { color: rgba(255,255,255,0.4); }
+
+    </style>
+</head>
+<body class="state-idle">
+
+    <div id="orb-container">
+        <div class="orb">
+            <div class="ring"></div>
+            <div class="ring" style="animation-delay: 0.5s;"></div>
+        </div>
+    </div>
+
+    <div id="panel">
+        <div id="panel-header">
+            <span>F.R.I.D.A.Y.</span>
+            <span class="status-text" id="status-label">STANDBY</span>
+        </div>
+        <div id="chat-history">
+            <!-- Messages go here -->
+        </div>
+        <div id="panel-footer">
+            <input type="text" id="cmd-input" placeholder="Type a command...">
+        </div>
+    </div>
+
+    <script>
+        const orbContainer = document.getElementById('orb-container');
+        const panel = document.getElementById('panel');
+        const cmdInput = document.getElementById('cmd-input');
+        const chatHistory = document.getElementById('chat-history');
+        const statusLabel = document.getElementById('status-label');
+
+        let isExpanded = false;
+        let isDragging = false;
+        let mouseStartX, mouseStartY;
+        let currentPhase = 'idle';
+
+        window.addEventListener('pywebviewready', function() {
+            setInterval(pollUpdates, 150);
+        });
+
+        async function pollUpdates() {
+            if (!window.pywebview || !window.pywebview.api) return;
+            try {
+                const updates = await window.pywebview.api.get_overlay_updates();
+                if (updates) {
+                    setPhase(updates.phase);
+                    if (updates.messages && updates.messages.length > 0) {
+                        updates.messages.forEach(msg => appendMessage(msg.kind, msg.text));
+                    }
+                }
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }
+
+        function setPhase(phase) {
+            if (currentPhase === phase) return;
+            document.body.className = `state-${phase}`;
+            currentPhase = phase;
+            statusLabel.textContent = phase === 'idle' ? 'STANDBY' : phase.toUpperCase();
+        }
+
+        function appendMessage(kind, text) {
+            const div = document.createElement('div');
+            div.className = `msg ${kind}`;
+            div.textContent = text;
+            chatHistory.appendChild(div);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        orbContainer.addEventListener('mousedown', (e) => {
+            isDragging = false;
+            mouseStartX = e.screenX;
+            mouseStartY = e.screenY;
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        function onMouseMove(e) {
+            const dx = e.screenX - mouseStartX;
+            const dy = e.screenY - mouseStartY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                isDragging = true;
+            }
+
+            if (isDragging && (dx !== 0 || dy !== 0) && window.pywebview && window.pywebview.api) {
+                window.pywebview.api.move_overlay_by(dx, dy);
+                mouseStartX = e.screenX;
+                mouseStartY = e.screenY;
+            }
+        }
+
+        function onMouseUp(e) {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+
+            if (!isDragging) {
+                togglePanel();
+            }
+        }
+
+        async function togglePanel() {
+            isExpanded = !isExpanded;
+            if (isExpanded) {
+                let targetWidth = 350;
+                let targetHeight = 450;
+                
+                let pos = await window.pywebview.api.get_overlay_position();
+                let curX = pos.x;
+                let curY = pos.y;
+                let newX = curX;
+                let newY = curY;
+                
+                if (curX + targetWidth > window.screen.availWidth) {
+                    newX = window.screen.availWidth - targetWidth - 10;
+                }
+                if (curY + targetHeight > window.screen.availHeight) {
+                    newY = window.screen.availHeight - targetHeight - 40;
+                }
+
+                if (newX !== curX || newY !== curY) {
+                    await window.pywebview.api.move_overlay(newX, newY);
+                }
+                
+                await window.pywebview.api.resize_overlay(targetWidth, targetHeight);
+                panel.style.display = 'flex';
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            } else {
+                panel.style.display = 'none';
+                await window.pywebview.api.resize_overlay(100, 100);
+            }
+        }
+
+        cmdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const text = cmdInput.value.trim();
+                if (text && window.pywebview && window.pywebview.api) {
+                    window.pywebview.api.send_command(text);
+                    appendMessage('user', text);
+                    cmdInput.value = '';
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

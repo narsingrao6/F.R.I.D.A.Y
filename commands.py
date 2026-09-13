@@ -231,8 +231,231 @@ def _execute_system_action(action: str, language: str) -> str:
 
 # ------------------------------------------------------------- public API
 
+def _handle_memory_command(command, language, memory):
+    text = command.strip()
+    lower = text.lower()
 
-def handle_local_command(command, language: str = "en"):
+    # ---- REMEMBER triggers (English + Telugu + Hindi) ----
+    remember_prefixes_en = (
+        "remember that ",
+        "remember ",
+        "don't forget that ",
+        "dont forget that ",
+        "keep in mind that ",
+    )
+
+    # Telugu script triggers — content may appear before or after
+    remember_te_after = (
+        "గుర్తుపెట్టుకో ", "గుర్తుంచుకో ", "remember చేయి ",
+    )
+    remember_te_trail = (
+        " గుర్తుపెట్టుకో", " గుర్తుంచుకో", " remember చేయి",
+        " గుర్తు పెట్టుకో",
+    )
+
+    # Telugu romanised
+    remember_rom_te = (
+        "gurthu pettuko ", "gurthupettuko ", "gurthunchuko ",
+        "remember cheyyi ",
+    )
+    remember_rom_te_trail = (
+        " gurthu pettuko", " gurthupettuko", " gurthunchuko",
+        " remember cheyyi",
+    )
+
+    # Hindi script
+    remember_hi_after = (
+        "याद रखो ", "याद रख लो ", "याद रखना ",
+        "remember करो ",
+    )
+    remember_hi_trail = (
+        " याद रखो", " याद रख लो", " याद रखना",
+        " remember करो",
+    )
+
+    # Hindi romanised
+    remember_rom_hi = (
+        "yaad rakho ", "yaad rakh lo ", "yaad rakhna ",
+        "remember karo ",
+    )
+    remember_rom_hi_trail = (
+        " yaad rakho", " yaad rakh lo", " yaad rakhna",
+        " remember karo",
+    )
+
+    content = None
+
+    # English prefix match
+    for prefix in remember_prefixes_en:
+        if lower.startswith(prefix):
+            content = text[len(prefix):].strip()
+            break
+
+    # Telugu / Hindi prefix match (content after trigger)
+    if content is None:
+        for prefixes in (remember_te_after, remember_rom_te,
+                         remember_hi_after, remember_rom_hi):
+            for prefix in prefixes:
+                if text.startswith(prefix) or lower.startswith(prefix.lower()):
+                    content = text[len(prefix):].strip()
+                    break
+            if content is not None:
+                break
+
+    # Telugu / Hindi trailing match (content before trigger)
+    if content is None:
+        for trails in (remember_te_trail, remember_rom_te_trail,
+                       remember_hi_trail, remember_rom_hi_trail):
+            for trail in trails:
+                if text.endswith(trail) or lower.endswith(trail.lower()):
+                    content = text[:-len(trail)].strip()
+                    break
+            if content is not None:
+                break
+
+    if content is not None:
+        if not content:
+            return (
+                "ఏ విషయం remember చేయాలో చెప్పండి."
+                if language == "te"
+                else
+                "कौन सी बात याद रखनी है, बताइए।"
+                if language == "hi"
+                else
+                "Tell me what you want me to remember."
+            )
+
+        memory.remember(content)
+
+        return (
+            "గుర్తుపెట్టుకున్నాను."
+            if language == "te"
+            else
+            "याद रख लिया।"
+            if language == "hi"
+            else
+            "I'll remember that."
+        )
+
+    # ---- FORGET triggers ----
+    forget_prefixes = (
+        "forget that ", "forget ", "remove from memory ",
+        "delete from memory ",
+        # Telugu
+        "మర్చిపో ", "forget చేయి ",
+        # Telugu romanised
+        "marchipo ", "forget cheyyi ",
+        # Hindi
+        "भूल जाओ ", "forget करो ",
+        # Hindi romanised
+        "bhool jao ", "forget karo ",
+    )
+
+    for prefix in forget_prefixes:
+        if lower.startswith(prefix) or text.startswith(prefix):
+            query = text[len(prefix):].strip()
+
+            if not query:
+                return (
+                    "ఏ memory ని remove చేయాలో చెప్పండి."
+                    if language == "te"
+                    else
+                    "कौन सी memory हटानी है, बताइए।"
+                    if language == "hi"
+                    else
+                    "Tell me which memory to forget."
+                )
+
+            count = memory.forget(query)
+
+            if count:
+                return (
+                    "ఆ memory ని మర్చిపోయాను."
+                    if language == "te"
+                    else
+                    "वो memory भूल गई।"
+                    if language == "hi"
+                    else
+                    "I've forgotten that memory."
+                )
+
+            return (
+                "ఆ memory నాకు దొరకలేదు."
+                if language == "te"
+                else
+                "वो memory नहीं मिली।"
+                if language == "hi"
+                else
+                "I couldn't find that memory."
+            )
+
+    # ---- LIST / RECALL triggers ----
+    list_phrases = (
+        # English
+        "what do you remember",
+        "what do you know about me",
+        "show my memories",
+        "list my memories",
+        "what do you remember about me",
+        # Telugu
+        "ఏం గుర్తుంది", "నా memories చూపించు",
+        "ఏమి గుర్తుంది", "నా గురించి ఏం తెలుసు",
+        # Telugu romanised
+        "em gurthundi", "naa memories choopinchu",
+        "emi gurthundi", "naa gurinchi em telusu",
+        # Hindi
+        "क्या याद है", "मेरी memories दिखाओ",
+        "मेरे बारे में क्या पता",
+        # Hindi romanised
+        "kya yaad hai", "meri memories dikhao",
+        "mere baare mein kya pata",
+    )
+
+    if any(phrase in lower or phrase in text for phrase in list_phrases):
+        memories = memory.list_memories()
+
+        if not memories:
+            return (
+                "ఇంకా ఏ memory save చేయలేదు."
+                if language == "te"
+                else
+                "अभी कोई memory save नहीं है।"
+                if language == "hi"
+                else
+                "I don't have any saved memories yet."
+            )
+
+        shown = memories[:5]
+        summary = "; ".join(
+            item.content for item in shown
+        )
+
+        remaining = len(memories) - len(shown)
+        extra = ""
+        if remaining > 0:
+            extra = (
+                f" ... మరియు {remaining} ఇంకా ఉన్నాయి."
+                if language == "te"
+                else
+                f" ... और {remaining} और हैं।"
+                if language == "hi"
+                else
+                f" ... and {remaining} more."
+            )
+
+        return (
+            f"నా దగ్గర ఇవి గుర్తున్నాయి: {summary}{extra}"
+            if language == "te"
+            else
+            f"మेरी याद में ये है: {summary}{extra}"
+            if language == "hi"
+            else
+            f"I remember: {summary}{extra}"
+        )
+
+    return None
+
+def handle_local_command(command, language: str = "en", memory=None):
     """
     Answer trivial questions without touching the AI brain.
 
@@ -245,8 +468,19 @@ def handle_local_command(command, language: str = "en"):
     if not command:
         return None
 
+
     text = command.lower().strip()
     text = text.translate(str.maketrans("", "", string.punctuation))
+
+    if memory is not None:
+        memory_answer = _handle_memory_command(
+            command,
+            language,
+            memory,
+        )
+
+        if memory_answer is not None:
+            return memory_answer
 
     if language not in ("en", "te", "hi"):
         language = "en"

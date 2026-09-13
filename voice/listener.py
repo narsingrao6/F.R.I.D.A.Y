@@ -28,6 +28,7 @@ guessed, on recorded Telugu/Hindi/Tenglish/Hinglish utterances:
 
 import os
 import tempfile
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import speech_recognition as sr
@@ -92,17 +93,18 @@ class VoiceListener:
                 "GROQ_API_KEY_1 is not set, so Whisper cannot be used."
             )
 
-        self.groq = Groq(api_key=api_key, **CLIENT_LIMITS)
+        self._groq_key = api_key
 
         # The second decode goes through the spare key when there is
         # one, so the two parallel passes never queue behind each other.
-        backup_key = os.environ.get("GROQ_API_KEY_2")
+        self._groq_backup_key = os.environ.get("GROQ_API_KEY_2")
 
-        self.groq_backup = (
-            Groq(api_key=backup_key, **CLIENT_LIMITS)
-            if backup_key
-            else self.groq
-        )
+        # GIL contention with WebView2 boot / other threads can stall a
+        # Groq() constructor for tens of seconds. Building clients
+        # lazily on first utterance keeps startup immune to that.
+        self._clients_lock = threading.Lock()
+        self.groq = None
+        self.groq_backup = None
 
         self.single_pass = os.environ.get("FRIDAY_SINGLE_PASS") == "1"
 
@@ -112,6 +114,29 @@ class VoiceListener:
         self.last_result = LanguageResult()
 
         self._calibrated = False
+
+    def _ensure_clients(self):
+        """Build both Groq clients once, on first use."""
+        if self.groq is not None:
+            return
+
+        with self._clients_lock:
+            if self.groq is not None:
+                return
+
+            self.groq = Groq(
+                api_key=self._groq_key,
+                **CLIENT_LIMITS,
+            )
+
+            self.groq_backup = (
+                Groq(
+                    api_key=self._groq_backup_key,
+                    **CLIENT_LIMITS,
+                )
+                if self._groq_backup_key
+                else self.groq
+            )
 
     # ------------------------------------------------------ microphone
 
@@ -225,6 +250,8 @@ class VoiceListener:
         try:
             path = self._write_wav(audio)
 
+            self._ensure_clients()
+
             print("F.R.I.D.A.Y.: Transcribing...")
 
             if self.single_pass:
@@ -318,12 +345,14 @@ class VoiceListener:
 
         self.last_result = result
 
-        print(f"You: {text}")
+        try:
+            print(f"You: {text}")
+        except UnicodeEncodeError:
+            print(f"You: {text.encode('ascii', 'replace').decode('ascii')}")
 
         heard = ", ".join(
             f"{c.name}={c.hint or '?'}" for c in candidates if c.text
         )
-
         print(
             f"Detected: {result.code} / {result.style} "
             f"(whisper said: {heard or 'nothing'}, "

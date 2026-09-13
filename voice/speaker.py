@@ -14,6 +14,10 @@ Also handles:
 """
 
 import asyncio
+import sys
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 import os
 import re
 import tempfile
@@ -220,6 +224,9 @@ async def _save(text, voice, path):
     )
 
     task = asyncio.create_task(communicate.save(path))
+    
+    start_time = time.time()
+    timeout = 15.0
 
     while not task.done():
 
@@ -233,6 +240,14 @@ async def _save(text, voice, path):
                 pass
 
             raise _Aborted()
+            
+        if time.time() - start_time > timeout:
+            task.cancel()
+            try:
+                await task
+            except BaseException:
+                pass
+            raise TimeoutError("Edge TTS request timed out.")
 
         await asyncio.sleep(0.05)
 

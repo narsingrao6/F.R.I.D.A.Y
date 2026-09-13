@@ -36,7 +36,7 @@ const stamp = () =>
   new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
 export function useFriday() {
-  const [phase, setPhase] = useState('thinking')
+  const [phase, setPhase] = useState('idle')
   const [messages, setMessages] = useState(SEED_MESSAGES)
   const [lang, setLang] = useState('en')
   const [clock, setClock] = useState(clockNow)
